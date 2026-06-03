@@ -1,0 +1,50 @@
+project:
+  name: trading-crowding-momentum-strategy
+  random_seed: 42
+
+data:
+  start_date: "20200101"
+  end_date: null
+  min_observations: 160
+  raw_dir: data/raw
+  processed_path: data/processed/panel_daily.parquet
+  tushare_token_env: TUSHARE_TOKEN
+  prefer_tushare: true
+  sleep_seconds: 0.25
+  indices:
+    - {symbol: "000300.SH", ak_symbol: "sh000300", name: "沪深300"}
+    - {symbol: "000905.SH", ak_symbol: "sh000905", name: "中证500"}
+    - {symbol: "000852.SH", ak_symbol: "sh000852", name: "中证1000"}
+    - {symbol: "399006.SZ", ak_symbol: "sz399006", name: "创业板指"}
+    - {symbol: "000688.SH", ak_symbol: "sh000688", name: "科创50"}
+    - {symbol: "000015.SH", ak_symbol: "sh000015", name: "红利指数"}
+    - {symbol: "000932.SH", ak_symbol: "sh000932", name: "中证消费"}
+    - {symbol: "000933.SH", ak_symbol: "sh000933", name: "中证医药"}
+    - {symbol: "931865.CSI", ak_symbol: "sh931865", name: "中证半导体"}
+    - {symbol: "399808.SZ", ak_symbol: "sz399808", name: "中证新能源"}
+    - {symbol: "399959.SZ", ak_symbol: "sz399959", name: "军工指数"}
+    - {symbol: "000934.SH", ak_symbol: "sh000934", name: "中证金融"}
+    - {symbol: "000006.SH", ak_symbol: "sh000006", name: "地产指数"}
+    - {symbol: "399971.SZ", ak_symbol: "sz399971", name: "传媒指数"}
+    - {symbol: "399998.SZ", ak_symbol: "sz399998", name: "计算机指数"}
+
+strategy:
+  rebalance: W-FRI
+  top_quantile: 0.2
+  max_weight: 0.10
+  transaction_cost_bps: 3
+  benchmark_symbol: "000300.SH"
+  benchmark_ma_window: 60
+  risk_on_exposure: 1.0
+  risk_off_exposure: 0.3
+
+factors:
+  ret_short_window: 5
+  ret_long_window: 20
+  crowding_window: 60
+  volatility_window: 20
+
+outputs:
+  figures_dir: outputs/figures
+  tables_dir: outputs/tables
+  reports_dir: outputs/reports
