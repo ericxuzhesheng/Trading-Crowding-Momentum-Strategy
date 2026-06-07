@@ -30,11 +30,11 @@ data:
 
 strategy:
   rebalance: W-FRI
-  top_quantile: 0.2
+  top_quantile: 0.3
   max_weight: 0.10
   transaction_cost_bps: 3
   benchmark_symbol: "000300.SH"
-  benchmark_ma_window: 60
+  benchmark_ma_window: 200
   risk_on_exposure: 1.0
   risk_off_exposure: 0.3
 
@@ -43,6 +43,11 @@ factors:
   ret_long_window: 20
   crowding_window: 60
   volatility_window: 20
+  score_weights:
+    ret_5d: 1.0
+    ret_20d: 0.6
+    crowding_penalty: 0.5
+    volatility_penalty: 0.1
 
 outputs:
   figures_dir: outputs/figures

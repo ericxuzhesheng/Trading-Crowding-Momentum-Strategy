@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/PYTHON-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=4a4f59" alt="Python">
   <img src="https://img.shields.io/badge/资产池-15个A股指数-f3c63f?style=for-the-badge&labelColor=4a4f59" alt="Universe">
   <img src="https://img.shields.io/badge/评估区间-2020--2026 · 1553日-4caf50?style=for-the-badge&labelColor=4a4f59" alt="Period">
-  <img src="https://img.shields.io/badge/主策略-Sharpe%200.24%20%7C%20MaxDD%20--54.56%25-9853e6?style=for-the-badge&labelColor=4a4f59" alt="Performance">
+  <img src="https://img.shields.io/badge/主策略-Sharpe%200.35%20%7C%20MaxDD%20--19.98%25-9853e6?style=for-the-badge&labelColor=4a4f59" alt="Performance">
   <img src="https://img.shields.io/badge/LICENSE-MIT-111111?style=for-the-badge&labelColor=4a4f59" alt="MIT">
 </p>
 
@@ -27,24 +27,26 @@
 
 ### 结果怎么样
 
-本次真实数据运行覆盖 2020-01-02 至 2026-06-03，共 15 个 A 股代表性指数、23295 条日频记录，数据由 Tushare 成功下载。
+本次真实数据运行覆盖 2020-01-02 至 2026-06-05，共 15 个 A 股代表性指数、23325 条日频记录，数据由 Tushare 成功下载。
+
+本轮优化先修复了一个关键回测问题：旧版本在调仓时把 0 权重当作缺失值向前填充，导致已卖出的标的继续保留旧仓位，风险暴露被高估。修复后，卖出标的权重会正确归零；随后将默认组合从 top20% 放宽到 top30%，把趋势过滤均线改为 MA200，并把最终得分参数化为“短动量 + 中期动量确认 - 拥挤度惩罚 - 波动率惩罚”。
 
 | 策略 | 年化收益 | 年化波动 | Sharpe | 最大回撤 | 最终净值 |
 |:--|--:|--:|--:|--:|--:|
-| 全指数等权 | 6.59% | 20.23% | 0.33 | -38.93% | 1.506 |
-| 纯拥挤度 top20 对照组 | 7.10% | 28.34% | 0.25 | -54.30% | 1.553 |
-| 沪深300买入持有 | 2.74% | 18.75% | 0.15 | -45.60% | 1.189 |
-| 动量 - 拥挤度惩罚 | 6.91% | 28.69% | 0.24 | -54.56% | 1.535 |
-| 动量 - 拥挤度惩罚 + 趋势过滤 | 6.91% | 28.69% | 0.24 | -54.56% | 1.535 |
-| 纯 5 日动量 top20 | 6.74% | 29.04% | 0.23 | -54.52% | 1.520 |
+| 全指数等权 | 6.31% | 20.22% | 0.31 | -38.93% | 1.482 |
+| 纯拥挤度 top30 对照组 | 2.41% | 11.40% | 0.21 | -31.97% | 1.165 |
+| 沪深300买入持有 | 2.34% | 18.76% | 0.12 | -45.60% | 1.160 |
+| 动量 - 拥挤度惩罚 | 4.19% | 11.29% | 0.37 | -24.10% | 1.302 |
+| 动量 - 拥挤度惩罚 + 趋势过滤 | 3.34% | 9.59% | 0.35 | -19.98% | 1.235 |
+| 纯 5 日动量 top30 | 3.64% | 11.64% | 0.31 | -24.64% | 1.258 |
 
 解读要点：
 
-- 主策略相对纯 5 日动量略有提升，年化收益从 6.74% 提高到 6.91%，波动率也略低。
-- 全指数等权组合 Sharpe 更高、回撤更浅，说明这个小指数池里分散化本身很有价值。
-- 纯拥挤度 top20 是对照组，不是推荐策略；它年化最高，但逻辑上更接近追逐交易热度，回撤仍然很深。
-- 趋势过滤版本与未过滤版本结果相同，说明当前 MA60 过滤规则在该样本和调仓路径下没有提供额外保护。
-- 整体最大回撤仍然超过 50%，该项目更适合作为研究框架，而不是直接实盘方案。
+- 趋势过滤主策略的最大回撤从旧结果约 -54.6% 降到 -20.0%，风险暴露显著收敛。
+- 未加趋势过滤的惩罚动量版本年化 4.19%、Sharpe 0.37，收益高于纯 5 日动量，同时回撤略低。
+- 加入 MA200 趋势过滤后年化降至 3.34%，但波动降至 9.59%、最大回撤降至 -19.98%，更适合作为稳健默认配置。
+- 全指数等权仍有更高年化收益，说明当前 15 个指数的小样本中，分散化本身仍是强基准。
+- 纯拥挤度仍只作为对照组，不作为推荐 alpha；拥挤度在主策略中继续作为风险惩罚项使用。
 
 ### 策略逻辑
 
@@ -56,7 +58,7 @@
 - 拥挤度：`turnover_z`、`amount_z`、`volume_z` 的 60 日滚动异常程度
 - 波动率风险：`vol_20d = rolling_std(daily_return, 20)`
 - 复合拥挤度：`rank(turnover_z) * 0.4 + rank(amount_z) * 0.3 + rank(ret_20d) * 0.3`
-- 最终得分：`rank(ret_5d) - 0.5 * rank(crowding_score) - 0.3 * rank(vol_20d)`
+- 最终得分：`1.0 * rank(ret_5d) + 0.6 * rank(ret_20d) - 0.5 * rank(crowding_score) - 0.1 * rank(vol_20d)`
 
 所有 rank 均为同一天不同指数之间的横截面 percentile rank，并且所有交易信号滞后一日，避免未来函数。
 
@@ -156,24 +158,26 @@ The key idea is not to use crowding directly as alpha. Crowding is used as a ris
 
 ### Results
 
-The latest real-data run covers 2020-01-02 to 2026-06-03, with 15 representative A-share indices and 23295 daily observations downloaded from Tushare.
+The latest real-data run covers 2020-01-02 to 2026-06-05, with 15 representative A-share indices and 23325 daily observations downloaded from Tushare.
+
+This optimization first fixed a critical backtest issue: the old implementation treated zero rebalance weights as missing values and forward-filled them, so sold positions could keep stale weights. After the fix, sold positions correctly reset to zero. The default strategy was then made more robust by widening selection from top20% to top30%, using an MA200 trend filter, and parameterizing the final score as short momentum plus medium-term confirmation minus crowding and volatility penalties.
 
 | Strategy | Annual Return | Annual Vol | Sharpe | Max Drawdown | Final NAV |
 |:--|--:|--:|--:|--:|--:|
-| All-index equal weight | 6.59% | 20.23% | 0.33 | -38.93% | 1.506 |
-| Pure crowding top20 ablation | 7.10% | 28.34% | 0.25 | -54.30% | 1.553 |
-| CSI 300 buy and hold | 2.74% | 18.75% | 0.15 | -45.60% | 1.189 |
-| Momentum minus crowding penalty | 6.91% | 28.69% | 0.24 | -54.56% | 1.535 |
-| Momentum minus crowding penalty plus trend filter | 6.91% | 28.69% | 0.24 | -54.56% | 1.535 |
-| Pure 5-day momentum top20 | 6.74% | 29.04% | 0.23 | -54.52% | 1.520 |
+| All-index equal weight | 6.31% | 20.22% | 0.31 | -38.93% | 1.482 |
+| Pure crowding top30 ablation | 2.41% | 11.40% | 0.21 | -31.97% | 1.165 |
+| CSI 300 buy and hold | 2.34% | 18.76% | 0.12 | -45.60% | 1.160 |
+| Momentum minus crowding penalty | 4.19% | 11.29% | 0.37 | -24.10% | 1.302 |
+| Momentum minus crowding penalty plus trend filter | 3.34% | 9.59% | 0.35 | -19.98% | 1.235 |
+| Pure 5-day momentum top30 | 3.64% | 11.64% | 0.31 | -24.64% | 1.258 |
 
 Takeaways:
 
-- The main penalized momentum strategy modestly improves over pure 5-day momentum.
-- Equal weight has a higher Sharpe and shallower drawdown, showing that diversification is valuable in this small index universe.
-- Pure crowding top20 is an ablation, not the recommended strategy. It has the highest annual return but still suffers deep drawdowns.
-- The MA60 trend filter did not change results in this run.
-- Drawdowns remain large, so this is a research framework rather than a production-ready trading system.
+- The trend-filtered main strategy reduced max drawdown from the old roughly -54.6% result to about -20.0%.
+- The unfiltered penalized momentum strategy earns 4.19% annualized with a 0.37 Sharpe, beating pure 5-day momentum while slightly reducing drawdown.
+- The MA200 trend filter lowers annual return to 3.34%, but also lowers volatility to 9.59% and max drawdown to -19.98%, making it the more conservative default.
+- Equal weight remains a strong benchmark in this small 15-index universe, confirming that diversification is valuable.
+- Pure crowding remains an ablation only; crowding is used as a risk penalty in the main strategy, not as standalone alpha.
 
 ### Strategy Logic
 
@@ -185,7 +189,7 @@ Signals:
 - Crowding proxies: 60-day rolling abnormality in turnover, amount, and volume
 - Volatility risk: `vol_20d = rolling_std(daily_return, 20)`
 - Composite crowding: `rank(turnover_z) * 0.4 + rank(amount_z) * 0.3 + rank(ret_20d) * 0.3`
-- Final score: `rank(ret_5d) - 0.5 * rank(crowding_score) - 0.3 * rank(vol_20d)`
+- Final score: `1.0 * rank(ret_5d) + 0.6 * rank(ret_20d) - 0.5 * rank(crowding_score) - 0.1 * rank(vol_20d)`
 
 All ranks are same-day cross-sectional percentile ranks. Tradable signals are shifted by one trading day to avoid look-ahead bias.
 

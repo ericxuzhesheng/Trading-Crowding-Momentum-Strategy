@@ -22,6 +22,11 @@ def _weekly_rebalance_dates(dates: pd.DatetimeIndex) -> pd.DatetimeIndex:
     return pd.DatetimeIndex(date_series.groupby(date_series.index.to_period("W-FRI")).max().dropna())
 
 
+def _moving_average(series: pd.Series, window: int) -> pd.Series:
+    """Calculate a moving average with robust minimum periods for short windows."""
+    return series.rolling(window, min_periods=min(20, window)).mean()
+
+
 def _select_weights(scores: pd.Series, top_quantile: float, max_weight: float, exposure: float) -> pd.Series:
     """Build capped equal weights from top-ranked scores."""
     valid = scores.dropna().sort_values(ascending=False)
@@ -42,7 +47,9 @@ def _score_column(strategy_name: str) -> str:
     """Map a strategy name to the lagged signal used for selection."""
     return {
         "momentum_top20": "ret_5d_signal",
+        "momentum_top_quantile": "ret_5d_signal",
         "crowding_top20": "crowding_score_signal",
+        "crowding_top_quantile": "crowding_score_signal",
         "momentum_crowding_penalty": "score_signal",
         "momentum_crowding_penalty_trend": "score_signal",
     }[strategy_name]
@@ -63,9 +70,9 @@ def run_single_strategy(
     score_matrix = _wide_prices(factors, _score_column(strategy_name))
     weekly_dates = _weekly_rebalance_dates(dates)
     benchmark = str(scfg["benchmark_symbol"])
-    benchmark_ma = close[benchmark].rolling(int(scfg["benchmark_ma_window"]), min_periods=20).mean() if benchmark in close else None
+    benchmark_ma = _moving_average(close[benchmark], int(scfg["benchmark_ma_window"])) if benchmark in close else None
 
-    desired = pd.DataFrame(0.0, index=dates, columns=symbols)
+    desired = pd.DataFrame(np.nan, index=dates, columns=symbols)
     rebalance_rows = []
     turnover_rows = []
     previous = pd.Series(0.0, index=symbols)
@@ -95,7 +102,7 @@ def run_single_strategy(
         )
         turnover_rows.append({"date": trade_date, "turnover": turnover, "transaction_cost": cost, "strategy": strategy_name})
 
-    weights = desired.replace(0.0, np.nan).ffill().fillna(0.0)
+    weights = desired.ffill().fillna(0.0)
     daily_turnover = pd.DataFrame(turnover_rows).set_index("date") if turnover_rows else pd.DataFrame(columns=["turnover", "transaction_cost", "strategy"])
     strategy_ret = (weights.shift(1).fillna(0.0) * returns).sum(axis=1)
     if not daily_turnover.empty:
@@ -105,6 +112,35 @@ def run_single_strategy(
     weights_df = pd.DataFrame(rebalance_rows)
     turnover_df = pd.DataFrame(turnover_rows)
     return nav_df, weights_df, turnover_df
+
+
+def build_daily_weights(factors: pd.DataFrame, config: dict, strategy_name: str, trend_filter: bool = False) -> pd.DataFrame:
+    """Return daily held weights for diagnostics and tests."""
+    scfg = config["strategy"]
+    close = _wide_prices(factors, "close")
+    dates = close.index
+    symbols = close.columns
+    score_matrix = _wide_prices(factors, _score_column(strategy_name))
+    weekly_dates = _weekly_rebalance_dates(dates)
+    benchmark = str(scfg["benchmark_symbol"])
+    benchmark_ma = _moving_average(close[benchmark], int(scfg["benchmark_ma_window"])) if benchmark in close else None
+
+    desired = pd.DataFrame(np.nan, index=dates, columns=symbols)
+    for signal_date in weekly_dates:
+        pos = dates.get_loc(signal_date)
+        if pos + 1 >= len(dates):
+            continue
+        trade_date = dates[pos + 1]
+        exposure = float(scfg["risk_on_exposure"])
+        if trend_filter and benchmark_ma is not None and close.loc[signal_date, benchmark] < benchmark_ma.loc[signal_date]:
+            exposure = float(scfg["risk_off_exposure"])
+        desired.loc[trade_date] = _select_weights(
+            score_matrix.loc[signal_date],
+            float(scfg["top_quantile"]),
+            float(scfg["max_weight"]),
+            exposure,
+        )
+    return desired.ffill().fillna(0.0)
 
 
 def run_buy_and_hold(factors: pd.DataFrame, benchmark_symbol: str) -> pd.DataFrame:
@@ -130,8 +166,8 @@ def run_all_backtests(factors: pd.DataFrame, config: dict) -> tuple[pd.DataFrame
     weight_frames = []
     turnover_frames = []
     for name, trend in [
-        ("momentum_top20", False),
-        ("crowding_top20", False),
+        ("momentum_top_quantile", False),
+        ("crowding_top_quantile", False),
         ("momentum_crowding_penalty", False),
         ("momentum_crowding_penalty_trend", True),
     ]:
