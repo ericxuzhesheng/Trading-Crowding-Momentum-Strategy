@@ -3,7 +3,7 @@ project:
   random_seed: 42
 
 data:
-  start_date: "20200101"
+  start_date: "20180101"
   end_date: null
   min_observations: 160
   raw_dir: data/raw
@@ -13,36 +13,36 @@ data:
   sleep_seconds: 0.25
   default_asset: FD
   indices:
+    - {symbol: "511380.SH", ak_symbol: "511380", asset: "FD", name: "Convertible Bond ETF"}
+    - {symbol: "511010.SH", ak_symbol: "511010", asset: "FD", name: "Government Bond ETF"}
+    - {symbol: "511030.SH", ak_symbol: "511030", asset: "FD", name: "Credit Bond ETF"}
+    - {symbol: "511880.SH", ak_symbol: "511880", asset: "FD", name: "Money Market ETF"}
     - {symbol: "510300.SH", ak_symbol: "510300", asset: "FD", name: "CSI300 ETF"}
     - {symbol: "510500.SH", ak_symbol: "510500", asset: "FD", name: "CSI500 ETF"}
     - {symbol: "512100.SH", ak_symbol: "512100", asset: "FD", name: "CSI1000 ETF"}
-    - {symbol: "510050.SH", ak_symbol: "510050", asset: "FD", name: "SSE50 ETF"}
-    - {symbol: "510180.SH", ak_symbol: "510180", asset: "FD", name: "SSE180 ETF"}
-    - {symbol: "159901.SZ", ak_symbol: "159901", asset: "FD", name: "SZ100 ETF"}
     - {symbol: "159915.SZ", ak_symbol: "159915", asset: "FD", name: "ChiNext ETF"}
-    - {symbol: "159949.SZ", ak_symbol: "159949", asset: "FD", name: "ChiNext50 ETF"}
-    - {symbol: "588000.SH", ak_symbol: "588000", asset: "FD", name: "STAR50 ETF"}
     - {symbol: "510880.SH", ak_symbol: "510880", asset: "FD", name: "Dividend ETF"}
-    - {symbol: "512880.SH", ak_symbol: "512880", asset: "FD", name: "Securities ETF"}
-    - {symbol: "512800.SH", ak_symbol: "512800", asset: "FD", name: "Bank ETF"}
-    - {symbol: "512000.SH", ak_symbol: "512000", asset: "FD", name: "Brokerage ETF"}
-    - {symbol: "512010.SH", ak_symbol: "512010", asset: "FD", name: "Healthcare ETF"}
-    - {symbol: "159992.SZ", ak_symbol: "159992", asset: "FD", name: "Innovation Drug ETF"}
-    - {symbol: "159928.SZ", ak_symbol: "159928", asset: "FD", name: "Consumption ETF"}
-    - {symbol: "512690.SH", ak_symbol: "512690", asset: "FD", name: "Alcohol ETF"}
     - {symbol: "512480.SH", ak_symbol: "512480", asset: "FD", name: "Semiconductor ETF"}
-    - {symbol: "159995.SZ", ak_symbol: "159995", asset: "FD", name: "Chip ETF"}
-    - {symbol: "515050.SH", ak_symbol: "515050", asset: "FD", name: "5G ETF"}
-    - {symbol: "515880.SH", ak_symbol: "515880", asset: "FD", name: "Communication ETF"}
-    - {symbol: "515030.SH", ak_symbol: "515030", asset: "FD", name: "New Energy Vehicle ETF"}
+    - {symbol: "159819.SZ", ak_symbol: "159819", asset: "FD", name: "AI ETF"}
+    - {symbol: "562500.SH", ak_symbol: "562500", asset: "FD", name: "Robotics ETF"}
     - {symbol: "516160.SH", ak_symbol: "516160", asset: "FD", name: "New Energy ETF"}
-    - {symbol: "515790.SH", ak_symbol: "515790", asset: "FD", name: "Photovoltaic ETF"}
+    - {symbol: "513310.SH", ak_symbol: "513310", asset: "FD", name: "China Korea Semiconductor ETF"}
+    - {symbol: "588000.SH", ak_symbol: "588000", asset: "FD", name: "STAR50 ETF"}
+    - {symbol: "516980.SH", ak_symbol: "516980", asset: "FD", name: "Cloud Computing ETF"}
+    - {symbol: "512880.SH", ak_symbol: "512880", asset: "FD", name: "Securities ETF"}
     - {symbol: "512660.SH", ak_symbol: "512660", asset: "FD", name: "Defense ETF"}
-    - {symbol: "512200.SH", ak_symbol: "512200", asset: "FD", name: "Real Estate ETF"}
-    - {symbol: "512980.SH", ak_symbol: "512980", asset: "FD", name: "Media ETF"}
-    - {symbol: "159869.SZ", ak_symbol: "159869", asset: "FD", name: "Gaming ETF"}
-    - {symbol: "512400.SH", ak_symbol: "512400", asset: "FD", name: "Nonferrous ETF"}
+    - {symbol: "159928.SZ", ak_symbol: "159928", asset: "FD", name: "Consumption ETF"}
+    - {symbol: "159920.SZ", ak_symbol: "159920", asset: "FD", name: "Hang Seng ETF"}
+    - {symbol: "161226.SZ", ak_symbol: "161226", asset: "FD", name: "Silver LOF"}
+    - {symbol: "159941.SZ", ak_symbol: "159941", asset: "FD", name: "Nasdaq 100 ETF"}
+    - {symbol: "513500.SH", ak_symbol: "513500", asset: "FD", name: "S&P 500 ETF"}
+    - {symbol: "513880.SH", ak_symbol: "513880", asset: "FD", name: "Nikkei 225 ETF"}
+    - {symbol: "513030.SH", ak_symbol: "513030", asset: "FD", name: "Europe ETF"}
     - {symbol: "518880.SH", ak_symbol: "518880", asset: "FD", name: "Gold ETF"}
+    - {symbol: "159980.SZ", ak_symbol: "159980", asset: "FD", name: "Nonferrous ETF"}
+    - {symbol: "159985.SZ", ak_symbol: "159985", asset: "FD", name: "Soybean Meal ETF"}
+    - {symbol: "515220.SH", ak_symbol: "515220", asset: "FD", name: "Coal ETF"}
+    - {symbol: "162411.SZ", ak_symbol: "162411", asset: "FD", name: "Crude Oil ETF"}
 
 strategy:
   rebalance: W-FRI
@@ -61,8 +61,8 @@ factors:
   volatility_window: 20
   score_weights:
     ret_5d: 1.0
-    ret_20d: 0.6
-    crowding_penalty: 0.5
+    ret_20d: 1.0
+    crowding_penalty: 0.65
     volatility_penalty: 0.1
 
 outputs:

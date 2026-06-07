@@ -9,9 +9,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/PYTHON-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=4a4f59" alt="Python">
-  <img src="https://img.shields.io/badge/资产池-30只A股ETF-f3c63f?style=for-the-badge&labelColor=4a4f59" alt="Universe">
-  <img src="https://img.shields.io/badge/评估区间-2020--2026 · 45531条日频记录-4caf50?style=for-the-badge&labelColor=4a4f59" alt="Period">
-  <img src="https://img.shields.io/badge/主策略-Sharpe%200.43%20%7C%20MaxDD%20--23.01%25-9853e6?style=for-the-badge&labelColor=4a4f59" alt="Performance">
+  <img src="https://img.shields.io/badge/资产池-30只多资产ETF-f3c63f?style=for-the-badge&labelColor=4a4f59" alt="Universe">
+  <img src="https://img.shields.io/badge/评估区间-2018--2026 · 53051条日频记录-4caf50?style=for-the-badge&labelColor=4a4f59" alt="Period">
+  <img src="https://img.shields.io/badge/主策略-Sharpe%200.93%20%7C%20MaxDD%20--11.96%25-9853e6?style=for-the-badge&labelColor=4a4f59" alt="Performance">
   <img src="https://img.shields.io/badge/LICENSE-MIT-111111?style=for-the-badge&labelColor=4a4f59" alt="MIT">
 </p>
 
@@ -27,30 +27,30 @@
 
 ### 结果怎么样
 
-本次真实数据运行覆盖 2020-01-02 至 2026-06-05，共 30 只 A 股宽基、行业、主题与商品 ETF，45531 条日频记录，数据由 Tushare 成功下载。
+本次真实数据运行覆盖 2018-01-02 至 2026-06-05，共 30 只来自 `Relaxed-Risk-Parity-Research/src/asset_universe.py` 的 ETF，覆盖债券/货币、A股宽基、科技成长、行业消费、港股、全球股票、贵金属、商品资源等 8 类资产，合计 53051 条日频记录，数据由 Tushare 成功下载。
 
-本轮优化先修复了一个关键回测问题：旧版本在调仓时把 0 权重当作缺失值向前填充，导致已卖出的标的继续保留旧仓位，风险暴露被高估。修复后，卖出标的权重会正确归零；随后把资产池从 15 个指数扩展到 30 只 ETF，使 10% 单标的上限不再天然压低仓位，并将默认组合设为 top30%、MA200 趋势过滤和“短动量 + 中期动量确认 - 拥挤度惩罚 - 波动率惩罚”。
+本轮优化先修复了一个关键回测问题：旧版本在调仓时把 0 权重当作缺失值向前填充，导致已卖出的标的继续保留旧仓位，风险暴露被高估。修复后，卖出标的权重会正确归零；随后改用用户 Relaxed Risk Parity 项目的 30 ETF 多资产池，使策略不再局限于单一 A 股行业轮动；最终默认参数为 top30%、MA200 趋势过滤、risk-off 30%，最终得分为“短动量 + 中期动量确认 - 拥挤度惩罚 - 波动率惩罚”。
 
 | 策略 | 年化收益 | 年化波动 | Sharpe | 最大回撤 | 最终净值 |
 |:--|--:|--:|--:|--:|--:|
-| 全 ETF 等权 | 7.30% | 20.78% | 0.35 | -40.51% | 1.572 |
-| 纯拥挤度 top30 对照组 | 4.05% | 20.83% | 0.19 | -36.79% | 1.291 |
-| 沪深300 ETF 买入持有 | 2.44% | 19.02% | 0.13 | -45.10% | 1.167 |
-| 动量 - 拥挤度惩罚 | 10.29% | 23.48% | 0.44 | -40.97% | 1.876 |
-| 动量 - 拥挤度惩罚 + 趋势过滤 | 7.22% | 16.96% | 0.43 | -23.01% | 1.565 |
-| 纯 5 日动量 top30 | 6.29% | 22.82% | 0.28 | -40.50% | 1.479 |
+| 全 ETF 等权 | 11.88% | 16.37% | 0.73 | -18.83% | 2.574 |
+| 纯拥挤度 top30 对照组 | 23.80% | 34.53% | 0.69 | -17.48% | 6.039 |
+| 沪深300 ETF 买入持有 | 1.89% | 19.55% | 0.10 | -45.10% | 1.171 |
+| 动量 - 拥挤度惩罚 | 14.57% | 16.12% | 0.90 | -17.80% | 3.145 |
+| 动量 - 拥挤度惩罚 + 趋势过滤 | 11.47% | 12.35% | 0.93 | -11.96% | 2.495 |
+| 纯 5 日动量 top30 | 10.53% | 16.64% | 0.63 | -16.36% | 2.324 |
 
 解读要点：
 
-- 30 ETF 版本解决了原 15 指数池仓位不足的问题，策略能在 10% 单标的上限下接近满仓运行。
-- 未加趋势过滤的惩罚动量版本年化 10.29%、Sharpe 0.44，显著高于纯 5 日动量和沪深300 ETF。
-- 加入 MA200 趋势过滤后，年化为 7.22%、Sharpe 0.43，最大回撤从未过滤版的 -40.97% 降至 -23.01%，更适合作为稳健默认配置。
-- 相比全 ETF 等权，趋势过滤主策略收益相近但回撤明显更低。
+- RRP ETF 池带来真正改善：多资产分散让策略不再被 A 股单一风险源支配。
+- 未加趋势过滤的惩罚动量版本年化 14.57%、Sharpe 0.90，显著高于纯 5 日动量和沪深300 ETF。
+- 加入 MA200 趋势过滤后，年化为 11.47%、Sharpe 0.93，最大回撤从未过滤版的 -17.80% 降至 -11.96%，更适合作为稳健默认配置。
+- 相比全 ETF 等权，趋势过滤主策略年化略低，但回撤更浅、Sharpe 更高。
 - 纯拥挤度仍只作为对照组，不作为推荐 alpha；拥挤度在主策略中继续作为风险惩罚项使用。
 
 ### 策略逻辑
 
-默认资产池包括沪深300ETF、中证500ETF、中证1000ETF、上证50ETF、创业板ETF、科创50ETF、红利ETF、证券、银行、医药、消费、酒、半导体、芯片、5G、新能源车、光伏、军工、地产、传媒、游戏、有色、黄金等 30 只代表性 ETF。
+默认资产池来自 Relaxed Risk Parity 项目的 30 只 ETF，包括可转债、国债、信用债、货币、沪深300、中证500、中证1000、创业板、红利、半导体、人工智能、机器人、新能源、中韩半导体、科创50、云计算、证券、军工、消费、恒生、白银、纳指、标普500、日经225、欧洲、黄金、有色、豆粕、煤炭、原油。
 
 因子定义：
 
@@ -58,7 +58,7 @@
 - 拥挤度：`turnover_z`、`amount_z`、`volume_z` 的 60 日滚动异常程度
 - 波动率风险：`vol_20d = rolling_std(daily_return, 20)`
 - 复合拥挤度：`rank(turnover_z) * 0.4 + rank(amount_z) * 0.3 + rank(ret_20d) * 0.3`
-- 最终得分：`1.0 * rank(ret_5d) + 0.6 * rank(ret_20d) - 0.5 * rank(crowding_score) - 0.1 * rank(vol_20d)`
+- 最终得分：`1.0 * rank(ret_5d) + 1.0 * rank(ret_20d) - 0.65 * rank(crowding_score) - 0.1 * rank(vol_20d)`
 
 所有 rank 均为同一天不同指数之间的横截面 percentile rank，并且所有交易信号滞后一日，避免未来函数。
 
@@ -158,30 +158,30 @@ The key idea is not to use crowding directly as alpha. Crowding is used as a ris
 
 ### Results
 
-The latest real-data run covers 2020-01-02 to 2026-06-05, with 30 representative A-share broad-market, sector, thematic, and commodity ETFs and 45531 daily observations downloaded from Tushare.
+The latest real-data run covers 2018-01-02 to 2026-06-05, with 30 ETFs from `Relaxed-Risk-Parity-Research/src/asset_universe.py`. The universe spans bonds/cash, China broad equity, technology and growth, China sectors and consumption, Hong Kong equity, global equity, precious metals, and commodities/resources, with 53051 daily observations downloaded from Tushare.
 
-This optimization first fixed a critical backtest issue: the old implementation treated zero rebalance weights as missing values and forward-filled them, so sold positions could keep stale weights. After the fix, sold positions correctly reset to zero. The universe was then expanded from 15 indices to 30 tradable ETFs, so the 10% single-name cap no longer forces the portfolio into a low-exposure state. The default strategy uses top30% selection, an MA200 trend filter, and a final score based on short momentum plus medium-term confirmation minus crowding and volatility penalties.
+This optimization first fixed a critical backtest issue: the old implementation treated zero rebalance weights as missing values and forward-filled them, so sold positions could keep stale weights. After the fix, sold positions correctly reset to zero. The universe was then replaced with the user's Relaxed Risk Parity 30-ETF multi-asset pool, so the strategy is no longer limited to single-market A-share sector rotation. The default strategy uses top30% selection, an MA200 trend filter, 30% risk-off exposure, and a final score based on short momentum plus medium-term confirmation minus crowding and volatility penalties.
 
 | Strategy | Annual Return | Annual Vol | Sharpe | Max Drawdown | Final NAV |
 |:--|--:|--:|--:|--:|--:|
-| All-ETF equal weight | 7.30% | 20.78% | 0.35 | -40.51% | 1.572 |
-| Pure crowding top30 ablation | 4.05% | 20.83% | 0.19 | -36.79% | 1.291 |
-| CSI 300 ETF buy and hold | 2.44% | 19.02% | 0.13 | -45.10% | 1.167 |
-| Momentum minus crowding penalty | 10.29% | 23.48% | 0.44 | -40.97% | 1.876 |
-| Momentum minus crowding penalty plus trend filter | 7.22% | 16.96% | 0.43 | -23.01% | 1.565 |
-| Pure 5-day momentum top30 | 6.29% | 22.82% | 0.28 | -40.50% | 1.479 |
+| All-ETF equal weight | 11.88% | 16.37% | 0.73 | -18.83% | 2.574 |
+| Pure crowding top30 ablation | 23.80% | 34.53% | 0.69 | -17.48% | 6.039 |
+| CSI 300 ETF buy and hold | 1.89% | 19.55% | 0.10 | -45.10% | 1.171 |
+| Momentum minus crowding penalty | 14.57% | 16.12% | 0.90 | -17.80% | 3.145 |
+| Momentum minus crowding penalty plus trend filter | 11.47% | 12.35% | 0.93 | -11.96% | 2.495 |
+| Pure 5-day momentum top30 | 10.53% | 16.64% | 0.63 | -16.36% | 2.324 |
 
 Takeaways:
 
-- The 30-ETF universe fixes the low-exposure problem caused by combining a 15-name universe with a 10% single-name cap.
-- The unfiltered penalized momentum strategy earns 10.29% annualized with a 0.44 Sharpe, outperforming pure 5-day momentum and CSI 300 ETF buy-and-hold.
-- The MA200 trend filter lowers annual return to 7.22%, but reduces max drawdown from -40.97% to -23.01%, making it the more conservative default.
-- Compared with all-ETF equal weight, the trend-filtered main strategy delivers similar annual return with materially lower drawdown.
+- The RRP ETF universe is the real improvement: multi-asset diversification prevents the strategy from being dominated by one A-share risk source.
+- The unfiltered penalized momentum strategy earns 14.57% annualized with a 0.90 Sharpe, outperforming pure 5-day momentum and CSI 300 ETF buy-and-hold.
+- The MA200 trend filter lowers annual return to 11.47%, but reduces max drawdown from -17.80% to -11.96%, making it the more conservative default.
+- Compared with all-ETF equal weight, the trend-filtered main strategy has slightly lower annual return but shallower drawdown and higher Sharpe.
 - Pure crowding remains an ablation only; crowding is used as a risk penalty in the main strategy, not as standalone alpha.
 
 ### Strategy Logic
 
-The default universe includes 30 representative ETFs covering CSI 300, CSI 500, CSI 1000, SSE 50, ChiNext, STAR 50, dividend, securities, banks, healthcare, consumption, alcohol, semiconductors, chips, 5G, new energy vehicles, photovoltaic, defense, real estate, media, gaming, nonferrous metals, and gold.
+The default universe comes from the Relaxed Risk Parity project and includes 30 ETFs: convertible bond, government bond, credit bond, money market, CSI 300, CSI 500, CSI 1000, ChiNext, dividend, semiconductor, AI, robotics, new energy, China-Korea semiconductor, STAR 50, cloud computing, securities, defense, consumption, Hang Seng, silver, Nasdaq 100, S&P 500, Nikkei 225, Europe, gold, nonferrous metals, soybean meal, coal, and crude oil.
 
 Signals:
 
@@ -189,7 +189,7 @@ Signals:
 - Crowding proxies: 60-day rolling abnormality in turnover, amount, and volume
 - Volatility risk: `vol_20d = rolling_std(daily_return, 20)`
 - Composite crowding: `rank(turnover_z) * 0.4 + rank(amount_z) * 0.3 + rank(ret_20d) * 0.3`
-- Final score: `1.0 * rank(ret_5d) + 0.6 * rank(ret_20d) - 0.5 * rank(crowding_score) - 0.1 * rank(vol_20d)`
+- Final score: `1.0 * rank(ret_5d) + 1.0 * rank(ret_20d) - 0.65 * rank(crowding_score) - 0.1 * rank(vol_20d)`
 
 All ranks are same-day cross-sectional percentile ranks. Tradable signals are shifted by one trading day to avoid look-ahead bias.
 
