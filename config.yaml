@@ -11,29 +11,45 @@ data:
   tushare_token_env: TUSHARE_TOKEN
   prefer_tushare: true
   sleep_seconds: 0.25
+  default_asset: FD
   indices:
-    - {symbol: "000300.SH", ak_symbol: "sh000300", name: "沪深300"}
-    - {symbol: "000905.SH", ak_symbol: "sh000905", name: "中证500"}
-    - {symbol: "000852.SH", ak_symbol: "sh000852", name: "中证1000"}
-    - {symbol: "399006.SZ", ak_symbol: "sz399006", name: "创业板指"}
-    - {symbol: "000688.SH", ak_symbol: "sh000688", name: "科创50"}
-    - {symbol: "000015.SH", ak_symbol: "sh000015", name: "红利指数"}
-    - {symbol: "000932.SH", ak_symbol: "sh000932", name: "中证消费"}
-    - {symbol: "000933.SH", ak_symbol: "sh000933", name: "中证医药"}
-    - {symbol: "931865.CSI", ak_symbol: "sh931865", name: "中证半导体"}
-    - {symbol: "399808.SZ", ak_symbol: "sz399808", name: "中证新能源"}
-    - {symbol: "399959.SZ", ak_symbol: "sz399959", name: "军工指数"}
-    - {symbol: "000934.SH", ak_symbol: "sh000934", name: "中证金融"}
-    - {symbol: "000006.SH", ak_symbol: "sh000006", name: "地产指数"}
-    - {symbol: "399971.SZ", ak_symbol: "sz399971", name: "传媒指数"}
-    - {symbol: "399998.SZ", ak_symbol: "sz399998", name: "计算机指数"}
+    - {symbol: "510300.SH", ak_symbol: "510300", asset: "FD", name: "CSI300 ETF"}
+    - {symbol: "510500.SH", ak_symbol: "510500", asset: "FD", name: "CSI500 ETF"}
+    - {symbol: "512100.SH", ak_symbol: "512100", asset: "FD", name: "CSI1000 ETF"}
+    - {symbol: "510050.SH", ak_symbol: "510050", asset: "FD", name: "SSE50 ETF"}
+    - {symbol: "510180.SH", ak_symbol: "510180", asset: "FD", name: "SSE180 ETF"}
+    - {symbol: "159901.SZ", ak_symbol: "159901", asset: "FD", name: "SZ100 ETF"}
+    - {symbol: "159915.SZ", ak_symbol: "159915", asset: "FD", name: "ChiNext ETF"}
+    - {symbol: "159949.SZ", ak_symbol: "159949", asset: "FD", name: "ChiNext50 ETF"}
+    - {symbol: "588000.SH", ak_symbol: "588000", asset: "FD", name: "STAR50 ETF"}
+    - {symbol: "510880.SH", ak_symbol: "510880", asset: "FD", name: "Dividend ETF"}
+    - {symbol: "512880.SH", ak_symbol: "512880", asset: "FD", name: "Securities ETF"}
+    - {symbol: "512800.SH", ak_symbol: "512800", asset: "FD", name: "Bank ETF"}
+    - {symbol: "512000.SH", ak_symbol: "512000", asset: "FD", name: "Brokerage ETF"}
+    - {symbol: "512010.SH", ak_symbol: "512010", asset: "FD", name: "Healthcare ETF"}
+    - {symbol: "159992.SZ", ak_symbol: "159992", asset: "FD", name: "Innovation Drug ETF"}
+    - {symbol: "159928.SZ", ak_symbol: "159928", asset: "FD", name: "Consumption ETF"}
+    - {symbol: "512690.SH", ak_symbol: "512690", asset: "FD", name: "Alcohol ETF"}
+    - {symbol: "512480.SH", ak_symbol: "512480", asset: "FD", name: "Semiconductor ETF"}
+    - {symbol: "159995.SZ", ak_symbol: "159995", asset: "FD", name: "Chip ETF"}
+    - {symbol: "515050.SH", ak_symbol: "515050", asset: "FD", name: "5G ETF"}
+    - {symbol: "515880.SH", ak_symbol: "515880", asset: "FD", name: "Communication ETF"}
+    - {symbol: "515030.SH", ak_symbol: "515030", asset: "FD", name: "New Energy Vehicle ETF"}
+    - {symbol: "516160.SH", ak_symbol: "516160", asset: "FD", name: "New Energy ETF"}
+    - {symbol: "515790.SH", ak_symbol: "515790", asset: "FD", name: "Photovoltaic ETF"}
+    - {symbol: "512660.SH", ak_symbol: "512660", asset: "FD", name: "Defense ETF"}
+    - {symbol: "512200.SH", ak_symbol: "512200", asset: "FD", name: "Real Estate ETF"}
+    - {symbol: "512980.SH", ak_symbol: "512980", asset: "FD", name: "Media ETF"}
+    - {symbol: "159869.SZ", ak_symbol: "159869", asset: "FD", name: "Gaming ETF"}
+    - {symbol: "512400.SH", ak_symbol: "512400", asset: "FD", name: "Nonferrous ETF"}
+    - {symbol: "518880.SH", ak_symbol: "518880", asset: "FD", name: "Gold ETF"}
 
 strategy:
   rebalance: W-FRI
   top_quantile: 0.3
   max_weight: 0.10
   transaction_cost_bps: 3
-  benchmark_symbol: "000300.SH"
+  benchmark_symbol: "510300.SH"
   benchmark_ma_window: 200
   risk_on_exposure: 1.0
   risk_off_exposure: 0.3

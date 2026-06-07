@@ -88,7 +88,7 @@ def _normalize_akshare(df: pd.DataFrame, symbol: str, name: str) -> pd.DataFrame
 
 
 def _fetch_tushare_one(item: dict[str, str], config: dict[str, Any], logger: logging.Logger) -> pd.DataFrame:
-    """Fetch one index from Tushare using pro_bar first, then index_daily."""
+    """Fetch one asset from Tushare using pro_bar first, then asset-specific daily endpoints."""
     ts = _optional_import("tushare")
     token_env = config["data"].get("tushare_token_env", "TUSHARE_TOKEN")
     token = os.getenv(token_env)
@@ -97,33 +97,59 @@ def _fetch_tushare_one(item: dict[str, str], config: dict[str, Any], logger: log
 
     pro = ts.pro_api(token)
     symbol = item["symbol"]
+    asset = item.get("asset", config["data"].get("default_asset", "I"))
     start_date = normalize_date_string(config["data"].get("start_date"))
     end_date = normalize_date_string(config["data"].get("end_date"))
 
     errors = []
     try:
-        df = ts.pro_bar(ts_code=symbol, api=pro, asset="I", freq="D", start_date=start_date, end_date=end_date)
+        df = ts.pro_bar(ts_code=symbol, api=pro, asset=asset, freq="D", start_date=start_date, end_date=end_date)
         if df is not None and not df.empty:
             return _normalize_tushare(df, symbol, item["name"])
         errors.append("pro_bar returned empty data")
     except Exception as exc:
         errors.append(f"pro_bar failed: {exc}")
 
-    try:
-        df = pro.index_daily(ts_code=symbol, start_date=start_date, end_date=end_date)
-        if df is not None and not df.empty:
-            return _normalize_tushare(df, symbol, item["name"])
-        errors.append("index_daily returned empty data")
-    except Exception as exc:
-        errors.append(f"index_daily failed: {exc}")
+    if asset == "I":
+        try:
+            df = pro.index_daily(ts_code=symbol, start_date=start_date, end_date=end_date)
+            if df is not None and not df.empty:
+                return _normalize_tushare(df, symbol, item["name"])
+            errors.append("index_daily returned empty data")
+        except Exception as exc:
+            errors.append(f"index_daily failed: {exc}")
+    elif asset == "FD":
+        try:
+            df = pro.fund_daily(ts_code=symbol, start_date=start_date, end_date=end_date)
+            if df is not None and not df.empty:
+                return _normalize_tushare(df, symbol, item["name"])
+            errors.append("fund_daily returned empty data")
+        except Exception as exc:
+            errors.append(f"fund_daily failed: {exc}")
 
     raise DataDownloadError(f"Tushare failed for {symbol}: {'; '.join(errors)}")
 
 
 def _fetch_akshare_one(item: dict[str, str], config: dict[str, Any], logger: logging.Logger) -> pd.DataFrame:
-    """Fetch one index from AKShare historical index daily endpoints."""
+    """Fetch one index or ETF from AKShare historical daily endpoints."""
     ak = _optional_import("akshare")
+    asset = item.get("asset", config["data"].get("default_asset", "I"))
     ak_symbol = item.get("ak_symbol") or item["symbol"].lower().replace(".sh", "").replace(".sz", "")
+    if asset == "FD" and hasattr(ak, "fund_etf_hist_em"):
+        code = item["symbol"].split(".")[0]
+        try:
+            df = ak.fund_etf_hist_em(
+                symbol=code,
+                period="daily",
+                start_date=normalize_date_string(config["data"].get("start_date")) or "19900101",
+                end_date=normalize_date_string(config["data"].get("end_date")) or "20500101",
+                adjust="",
+            )
+            if df is not None and not df.empty:
+                return _normalize_akshare(df, item["symbol"], item["name"])
+        except Exception as exc:
+            raise DataDownloadError(f"AKShare fund_etf_hist_em({code}) failed: {exc}") from exc
+
     if "." in item["symbol"]:
         market = item["symbol"].split(".")[-1].lower()
         code = item["symbol"].split(".")[0]

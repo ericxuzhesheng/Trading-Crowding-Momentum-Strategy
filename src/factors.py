@@ -23,9 +23,9 @@ def add_factors(panel: pd.DataFrame, config: dict) -> pd.DataFrame:
     """Build momentum, crowding, volatility, and lagged tradable scores."""
     df = panel.copy().sort_values(["symbol", "date"])
     fcfg = config["factors"]
-    df["daily_return"] = df.groupby("symbol")["close"].pct_change()
-    df["ret_5d"] = df.groupby("symbol")["close"].pct_change(int(fcfg["ret_short_window"]))
-    df["ret_20d"] = df.groupby("symbol")["close"].pct_change(int(fcfg["ret_long_window"]))
+    df["daily_return"] = df.groupby("symbol")["close"].pct_change(fill_method=None)
+    df["ret_5d"] = df.groupby("symbol")["close"].pct_change(int(fcfg["ret_short_window"]), fill_method=None)
+    df["ret_20d"] = df.groupby("symbol")["close"].pct_change(int(fcfg["ret_long_window"]), fill_method=None)
     df["turnover_z"] = df.groupby("symbol")["turnover"].transform(lambda s: rolling_zscore(s, int(fcfg["crowding_window"])))
     df["amount_z"] = df.groupby("symbol")["amount"].transform(lambda s: rolling_zscore(s, int(fcfg["crowding_window"])))
     df["volume_z"] = df.groupby("symbol")["volume"].transform(lambda s: rolling_zscore(s, int(fcfg["crowding_window"])))

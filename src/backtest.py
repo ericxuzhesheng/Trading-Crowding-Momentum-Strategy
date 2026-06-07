@@ -64,7 +64,7 @@ def run_single_strategy(
     """Run a weekly top-quantile rotation strategy and return NAV, weights, and turnover."""
     scfg = config["strategy"]
     close = _wide_prices(factors, "close")
-    returns = close.pct_change().fillna(0.0)
+    returns = close.pct_change(fill_method=None).fillna(0.0)
     dates = close.index
     symbols = close.columns
     score_matrix = _wide_prices(factors, _score_column(strategy_name))
@@ -148,14 +148,14 @@ def run_buy_and_hold(factors: pd.DataFrame, benchmark_symbol: str) -> pd.DataFra
     close = _wide_prices(factors, "close")
     if benchmark_symbol not in close:
         raise ValueError(f"Benchmark symbol {benchmark_symbol} is missing from panel.")
-    ret = close[benchmark_symbol].pct_change().fillna(0.0)
-    return pd.DataFrame({"date": close.index, "strategy": "hs300_buy_hold", "return": ret.values, "nav": (1 + ret).cumprod().values})
+    ret = close[benchmark_symbol].pct_change(fill_method=None).fillna(0.0)
+    return pd.DataFrame({"date": close.index, "strategy": "csi300_etf_buy_hold", "return": ret.values, "nav": (1 + ret).cumprod().values})
 
 
 def run_equal_weight(factors: pd.DataFrame) -> pd.DataFrame:
     """Build an all-index equal-weight daily rebalanced benchmark."""
     close = _wide_prices(factors, "close")
-    returns = close.pct_change().fillna(0.0)
+    returns = close.pct_change(fill_method=None).fillna(0.0)
     ret = returns.mean(axis=1)
     return pd.DataFrame({"date": close.index, "strategy": "all_index_equal_weight", "return": ret.values, "nav": (1 + ret).cumprod().values})
 
