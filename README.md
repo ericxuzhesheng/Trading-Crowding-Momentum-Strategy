@@ -15,6 +15,11 @@
   <img src="https://img.shields.io/badge/LICENSE-MIT-111111?style=for-the-badge&labelColor=4a4f59" alt="MIT">
 </p>
 
+<p align="center">
+  <strong>English Description:</strong>
+  A reproducible multi-asset ETF rotation research project that combines short- and medium-term momentum with trading-crowding and volatility penalties, using Tushare/AKShare data, weekly rebalancing, transaction-cost-aware backtests, and bilingual reporting.
+</p>
+
 ---
 
 ## 中文说明
