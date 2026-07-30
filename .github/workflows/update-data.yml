@@ -1,0 +1,47 @@
+# 每个交易日自动更新数据 | Auto-Update Data on Every Trading Day
+#
+# 定时：北京时间周一至周五 17:00（UTC 9:00），A 股收盘后
+# Schedule: Mon-Fri at 17:00 Beijing time (UTC 9:00), after A-share market close
+#
+# 节假日的非交易日：管道拉不到新数据，parquet 无变化 → 自动跳过提交
+# On non-trading holidays: no new data → parquet unchanged → commit step auto-skips
+
+name: Update Market Data
+
+on:
+  schedule:
+    - cron: "0 9 * * 1-5"
+  workflow_dispatch:
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run data pipeline
+        env:
+          TUSHARE_TOKEN: ${{ secrets.TUSHARE_TOKEN }}
+        run: python run_pipeline.py --config config.yaml
+
+      - name: Commit updated data
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: auto-update data $(date +%Y-%m-%d)"
+          commit_options: "--no-verify"
+          file_pattern: "data/processed/panel_daily.parquet outputs/figures/*.png outputs/tables/*.csv outputs/reports/backtest_report.md"
+          skip_dirty_check: false
+          skip_fetch: true
+          disable_globbing: false
