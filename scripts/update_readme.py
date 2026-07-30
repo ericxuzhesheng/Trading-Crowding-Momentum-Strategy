@@ -107,7 +107,7 @@ def update_readme(readme_path: Path, summary: pd.DataFrame, panel: pd.DataFrame)
     )
     text = re.sub(
         r'https://img\.shields\.io/badge/[^"]+(?=" alt="Main%20Strategy")',
-        _badge("Main Strategy", f"Sharpe {sharpe_str} | MaxDD {mdd_str}", "9853e6"),
+        _badge("Main Strategy", f"Sharpe {sharpe_str} | MaxDD {mdd_str.replace('-', '--')}", "9853e6"),
         text,
     )
 
