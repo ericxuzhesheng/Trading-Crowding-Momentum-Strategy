@@ -10,8 +10,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/PYTHON-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=4a4f59" alt="Python">
   <img src="https://img.shields.io/badge/资产池-30只多资产ETF-f3c63f?style=for-the-badge&labelColor=4a4f59" alt="Universe">
-  <img src="https://img.shields.io/badge/评估区间-2018--2026 · 53051条日频记录-4caf50?style=for-the-badge&labelColor=4a4f59" alt="Period">
-  <img src="https://img.shields.io/badge/主策略-Sharpe%200.93%20%7C%20MaxDD%20--11.96%25-9853e6?style=for-the-badge&labelColor=4a4f59" alt="Performance">
+  <img src="https://img.shields.io/badge/评估区间-2018--------2026%20%C2%B7%2053051条日频记录-4caf50?style=for-the-badge&labelColor=4a4f59" alt="Period">
+  <img src="https://img.shields.io/badge/主策略-Sharpe%200.93%20%7C%20MaxDD%20-11.96%25-9853e6?style=for-the-badge&labelColor=4a4f59" alt="Performance">
   <img src="https://img.shields.io/badge/LICENSE-MIT-111111?style=for-the-badge&labelColor=4a4f59" alt="MIT">
 </p>
 
@@ -32,7 +32,7 @@
 
 ### 结果怎么样
 
-本次真实数据运行覆盖 2018-01-02 至 2026-06-05，共 30 只来自 `Relaxed-Risk-Parity-Research/src/asset_universe.py` 的 ETF，覆盖债券/货币、A股宽基、科技成长、行业消费、港股、全球股票、贵金属、商品资源等 8 类资产，合计 53051 条日频记录，数据由 Tushare 成功下载。
+本次真实数据运行覆盖 2018-01-02 至 2026-06-05，共 30 只 ETF，合计 53051 条日频记录，数据由 Tushare 成功下载。
 
 本轮优化先修复了一个关键回测问题：旧版本在调仓时把 0 权重当作缺失值向前填充，导致已卖出的标的继续保留旧仓位，风险暴露被高估。修复后，卖出标的权重会正确归零；随后改用用户 Relaxed Risk Parity 项目的 30 ETF 多资产池，使策略不再局限于单一 A 股行业轮动；最终默认参数为 top30%、MA200 趋势过滤、risk-off 30%，最终得分为“短动量 + 中期动量确认 - 拥挤度惩罚 - 波动率惩罚”。
 
@@ -163,18 +163,18 @@ The key idea is not to use crowding directly as alpha. Crowding is used as a ris
 
 ### Results
 
-The latest real-data run covers 2018-01-02 to 2026-06-05, with 30 ETFs from `Relaxed-Risk-Parity-Research/src/asset_universe.py`. The universe spans bonds/cash, China broad equity, technology and growth, China sectors and consumption, Hong Kong equity, global equity, precious metals, and commodities/resources, with 53051 daily observations downloaded from Tushare.
+The latest real-data run covers 2018-01-02 to 2026-06-05, with 30 ETFs, 53051 daily observations downloaded from Tushare.
 
 This optimization first fixed a critical backtest issue: the old implementation treated zero rebalance weights as missing values and forward-filled them, so sold positions could keep stale weights. After the fix, sold positions correctly reset to zero. The universe was then replaced with the user's Relaxed Risk Parity 30-ETF multi-asset pool, so the strategy is no longer limited to single-market A-share sector rotation. The default strategy uses top30% selection, an MA200 trend filter, 30% risk-off exposure, and a final score based on short momentum plus medium-term confirmation minus crowding and volatility penalties.
 
 | Strategy | Annual Return | Annual Vol | Sharpe | Max Drawdown | Final NAV |
 |:--|--:|--:|--:|--:|--:|
-| All-ETF equal weight | 11.88% | 16.37% | 0.73 | -18.83% | 2.574 |
-| Pure crowding top30 ablation | 23.80% | 34.53% | 0.69 | -17.48% | 6.039 |
-| CSI 300 ETF buy and hold | 1.89% | 19.55% | 0.10 | -45.10% | 1.171 |
-| Momentum minus crowding penalty | 14.57% | 16.12% | 0.90 | -17.80% | 3.145 |
-| Momentum minus crowding penalty plus trend filter | 11.47% | 12.35% | 0.93 | -11.96% | 2.495 |
-| Pure 5-day momentum top30 | 10.53% | 16.64% | 0.63 | -16.36% | 2.324 |
+| All-ETF EW | 11.88% | 16.37% | 0.73 | -18.83% | 2.574 |
+| Pure Crowding | 23.80% | 34.53% | 0.69 | -17.48% | 6.039 |
+| CSI 300 B&H | 1.89% | 19.55% | 0.10 | -45.10% | 1.171 |
+| Mom-Crowding | 14.57% | 16.12% | 0.90 | -17.80% | 3.145 |
+| Mom-Crowding+Trend | 11.47% | 12.35% | 0.93 | -11.96% | 2.495 |
+| Pure 5D Mom | 10.53% | 16.64% | 0.63 | -16.36% | 2.324 |
 
 Takeaways:
 

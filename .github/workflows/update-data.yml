@@ -38,12 +38,15 @@ jobs:
           TUSHARE_TOKEN: ${{ secrets.TUSHARE_TOKEN }}
         run: python run_pipeline.py --config config.yaml
 
+      - name: Update README with latest metrics
+        run: python scripts/update_readme.py
+
       - name: Commit updated data
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: auto-update market data to latest"
           commit_options: "--no-verify"
-          file_pattern: "data/processed/panel_daily.parquet outputs/figures/*.png outputs/tables/*.csv outputs/reports/backtest_report.md"
+          file_pattern: "data/processed/panel_daily.parquet outputs/figures/*.png outputs/tables/*.csv outputs/reports/backtest_report.md README.md"
           skip_dirty_check: false
           skip_fetch: true
           disable_globbing: false
