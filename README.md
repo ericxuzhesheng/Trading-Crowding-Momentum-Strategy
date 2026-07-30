@@ -10,8 +10,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/PYTHON-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=4a4f59" alt="Python">
   <img src="https://img.shields.io/badge/资产池-30只多资产ETF-f3c63f?style=for-the-badge&labelColor=4a4f59" alt="Universe">
-  <img src="https://img.shields.io/badge/评估区间-2018--------2026%20%C2%B7%2053051条日频记录-4caf50?style=for-the-badge&labelColor=4a4f59" alt="Period">
-  <img src="https://img.shields.io/badge/主策略-Sharpe%200.93%20%7C%20MaxDD%20-11.96%25-9853e6?style=for-the-badge&labelColor=4a4f59" alt="Performance">
+  <img src="https://img.shields.io/badge/评估区间-2018--2026%2520·%252054161条日频记录-4caf50?style=for-the-badge&labelColor=4a4f59" alt="Period">
+  <img src="https://img.shields.io/badge/主策略-Sharpe%200.72%20%7C%20MaxDD%20-18.77%25-9853e6?style=for-the-badge&labelColor=4a4f59" alt="Performance">
   <img src="https://img.shields.io/badge/LICENSE-MIT-111111?style=for-the-badge&labelColor=4a4f59" alt="MIT">
 </p>
 
@@ -32,24 +32,24 @@
 
 ### 结果怎么样
 
-本次真实数据运行覆盖 2018-01-02 至 2026-06-05，共 30 只 ETF，合计 53051 条日频记录，数据由 Tushare 成功下载。
+本次真实数据运行覆盖 2018-01-02 至 2026-07-29，共 30 只 ETF，合计 54161 条日频记录，数据由 Tushare 成功下载。
 
 本轮优化先修复了一个关键回测问题：旧版本在调仓时把 0 权重当作缺失值向前填充，导致已卖出的标的继续保留旧仓位，风险暴露被高估。修复后，卖出标的权重会正确归零；随后改用用户 Relaxed Risk Parity 项目的 30 ETF 多资产池，使策略不再局限于单一 A 股行业轮动；最终默认参数为 top30%、MA200 趋势过滤、risk-off 30%，最终得分为“短动量 + 中期动量确认 - 拥挤度惩罚 - 波动率惩罚”。
 
 | 策略 | 年化收益 | 年化波动 | Sharpe | 最大回撤 | 最终净值 |
 |:--|--:|--:|--:|--:|--:|
-| 全 ETF 等权 | 11.88% | 16.37% | 0.73 | -18.83% | 2.574 |
-| 纯拥挤度 top30 对照组 | 23.80% | 34.53% | 0.69 | -17.48% | 6.039 |
-| 沪深300 ETF 买入持有 | 1.89% | 19.55% | 0.10 | -45.10% | 1.171 |
-| 动量 - 拥挤度惩罚 | 14.57% | 16.12% | 0.90 | -17.80% | 3.145 |
-| 动量 - 拥挤度惩罚 + 趋势过滤 | 11.47% | 12.35% | 0.93 | -11.96% | 2.495 |
-| 纯 5 日动量 top30 | 10.53% | 16.64% | 0.63 | -16.36% | 2.324 |
+| 全 ETF 等权 | 10.86% | 16.50% | 0.66 | -18.83% | 2.419 |
+| 纯拥挤度 top30 对照组 | 22.00% | 34.43% | 0.64 | -17.38% | 5.495 |
+| 沪深300 ETF 买入持有 | 1.39% | 19.71% | 0.07 | -45.10% | 1.126 |
+| 动量 - 拥挤度惩罚 | 12.12% | 16.44% | 0.74 | -19.42% | 2.664 |
+| 动量 - 拥挤度惩罚 + 趋势过滤 | 9.20% | 12.81% | 0.72 | -18.77% | 2.126 |
+| 纯 5 日动量 top30 | 8.07% | 16.92% | 0.48 | -20.81% | 1.945 |
 
 解读要点：
 
 - RRP ETF 池带来真正改善：多资产分散让策略不再被 A 股单一风险源支配。
-- 未加趋势过滤的惩罚动量版本年化 14.57%、Sharpe 0.90，显著高于纯 5 日动量和沪深300 ETF。
-- 加入 MA200 趋势过滤后，年化为 11.47%、Sharpe 0.93，最大回撤从未过滤版的 -17.80% 降至 -11.96%，更适合作为稳健默认配置。
+- 未加趋势过滤的惩罚动量版本年化 12.12%、Sharpe 0.74，显著高于纯 5 日动量和沪深300 ETF。
+- 加入 MA200 趋势过滤后，年化为 9.20%、Sharpe 0.72，最大回撤从未过滤版的 -19.42% 降至 -18.77%，更适合作为稳健默认配置。
 - 相比全 ETF 等权，趋势过滤主策略年化略低，但回撤更浅、Sharpe 更高。
 - 纯拥挤度仍只作为对照组，不作为推荐 alpha；拥挤度在主策略中继续作为风险惩罚项使用。
 
@@ -163,24 +163,24 @@ The key idea is not to use crowding directly as alpha. Crowding is used as a ris
 
 ### Results
 
-The latest real-data run covers 2018-01-02 to 2026-06-05, with 30 ETFs, 53051 daily observations downloaded from Tushare.
+The latest real-data run covers 2018-01-02 to 2026-07-29, with 30 ETFs, 54161 daily observations downloaded from Tushare.
 
 This optimization first fixed a critical backtest issue: the old implementation treated zero rebalance weights as missing values and forward-filled them, so sold positions could keep stale weights. After the fix, sold positions correctly reset to zero. The universe was then replaced with the user's Relaxed Risk Parity 30-ETF multi-asset pool, so the strategy is no longer limited to single-market A-share sector rotation. The default strategy uses top30% selection, an MA200 trend filter, 30% risk-off exposure, and a final score based on short momentum plus medium-term confirmation minus crowding and volatility penalties.
 
 | Strategy | Annual Return | Annual Vol | Sharpe | Max Drawdown | Final NAV |
 |:--|--:|--:|--:|--:|--:|
-| All-ETF EW | 11.88% | 16.37% | 0.73 | -18.83% | 2.574 |
-| Pure Crowding | 23.80% | 34.53% | 0.69 | -17.48% | 6.039 |
-| CSI 300 B&H | 1.89% | 19.55% | 0.10 | -45.10% | 1.171 |
-| Mom-Crowding | 14.57% | 16.12% | 0.90 | -17.80% | 3.145 |
-| Mom-Crowding+Trend | 11.47% | 12.35% | 0.93 | -11.96% | 2.495 |
-| Pure 5D Mom | 10.53% | 16.64% | 0.63 | -16.36% | 2.324 |
+| All-ETF EW | 10.86% | 16.50% | 0.66 | -18.83% | 2.419 |
+| Pure Crowding | 22.00% | 34.43% | 0.64 | -17.38% | 5.495 |
+| CSI 300 B&H | 1.39% | 19.71% | 0.07 | -45.10% | 1.126 |
+| Mom-Crowding | 12.12% | 16.44% | 0.74 | -19.42% | 2.664 |
+| Mom-Crowding+Trend | 9.20% | 12.81% | 0.72 | -18.77% | 2.126 |
+| Pure 5D Mom | 8.07% | 16.92% | 0.48 | -20.81% | 1.945 |
 
 Takeaways:
 
 - The RRP ETF universe is the real improvement: multi-asset diversification prevents the strategy from being dominated by one A-share risk source.
-- The unfiltered penalized momentum strategy earns 14.57% annualized with a 0.90 Sharpe, outperforming pure 5-day momentum and CSI 300 ETF buy-and-hold.
-- The MA200 trend filter lowers annual return to 11.47%, but reduces max drawdown from -17.80% to -11.96%, making it the more conservative default.
+- The unfiltered penalized momentum strategy earns 12.12% annualized with a 0.74 Sharpe, outperforming pure 5-day momentum and CSI 300 ETF buy-and-hold.
+- The MA200 trend filter lowers annual return to 9.20%, but reduces max drawdown from -19.42% to -18.77%, making it the more conservative default.
 - Compared with all-ETF equal weight, the trend-filtered main strategy has slightly lower annual return but shallower drawdown and higher Sharpe.
 - Pure crowding remains an ablation only; crowding is used as a risk penalty in the main strategy, not as standalone alpha.
 
