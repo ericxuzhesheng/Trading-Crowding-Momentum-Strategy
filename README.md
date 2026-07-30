@@ -8,10 +8,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/PYTHON-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=4a4f59" alt="Python">
   <img src="https://img.shields.io/badge/Universe-30%20Multi--Asset%20ETFs-f3c63f?style=for-the-badge&labelColor=4a4f59" alt="Universe">
   <img src="https://img.shields.io/badge/Period-2018%E2%80%932026%20%C2%B7%2054161%20obs-4caf50?style=for-the-badge&labelColor=4a4f59" alt="Period">
   <img src="https://img.shields.io/badge/Main%20Strategy-Sharpe%200.72%20%7C%20MaxDD%20--18.77%25-9853e6?style=for-the-badge&labelColor=4a4f59" alt="Main Strategy">
+  <img src="https://img.shields.io/badge/PYTHON-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=4a4f59" alt="Python">
   <img src="https://img.shields.io/badge/LICENSE-MIT-111111?style=for-the-badge&labelColor=4a4f59" alt="MIT">
 </p>
 
