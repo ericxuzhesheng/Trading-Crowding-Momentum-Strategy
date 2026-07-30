@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from urllib.parse import quote
 
 import pandas as pd
 
@@ -21,20 +22,26 @@ STRATEGY_LABELS: dict[str, str] = {
     "momentum_top_quantile": "纯 5 日动量 top30 / Pure 5D Mom",
 }
 
+# English-only badge labels (shields.io breaks on Chinese characters)
+BADGE_LABEL_MAP = {
+    "评估区间": "Period",
+    "主策略": "Main Strategy",
+}
+
 
 def _fmt_pct(value: float) -> str:
-    """Format a decimal as a percentage string, e.g. 0.1196 -> "-11.96%"."""
+    """Format a decimal as a percentage string, e.g. 0.1196 -> '-11.96%'."""
     return f"{value * 100:.2f}%"
 
 
 def _badge(label: str, msg: str, color: str = "4caf50") -> str:
-    """Build a shields.io badge URL — let the browser handle encoding."""
-    return f"https://img.shields.io/badge/{label}-{msg}-{color}?style=for-the-badge&labelColor=4a4f59"
-
-
-def _badge_range(label: str, msg: str, color: str = "4caf50") -> str:
-    """Like _badge but preserves '--' for year-range display."""
-    return f"https://img.shields.io/badge/{label}-{msg}-{color}?style=for-the-badge&labelColor=4a4f59"
+    """Build a shields.io badge URL with proper percent-encoding."""
+    safe_label = BADGE_LABEL_MAP.get(label, label)
+    safe_msg = quote(msg, safe="")
+    return (
+        f"https://img.shields.io/badge/{quote(safe_label, safe='')}"
+        f"-{safe_msg}-{color}?style=for-the-badge&labelColor=4a4f59"
+    )
 
 
 def _build_performance_table(summary: pd.DataFrame, lang: str) -> str:
@@ -90,27 +97,17 @@ def update_readme(readme_path: Path, summary: pd.DataFrame, panel: pd.DataFrame)
     text = readme_path.read_text(encoding="utf-8")
 
     # ---- 1. shields.io badges ----
-    SHARPE_STR = f"{sharpe:.2f}"
-    MDD_STR = _fmt_pct(mdd)
+    sharpe_str = f"{sharpe:.2f}"
+    mdd_str = _fmt_pct(mdd)
 
     text = re.sub(
-        r'https://img\.shields\.io/badge/评估区间-[^"]+',
-        _badge_range("评估区间", f"{start_year}--{end_year} · {num_rows}条日频记录"),
+        r'https://img\.shields\.io/badge/[^"]+(?=" alt="Period")',
+        _badge("Period", f"{start_year}–{end_year} · {num_rows} obs"),
         text,
     )
     text = re.sub(
-        r'https://img\.shields\.io/badge/主策略-[^"]+',
-        _badge("主策略", f"Sharpe {SHARPE_STR} | MaxDD {MDD_STR}", "9853e6"),
-        text,
-    )
-    text = re.sub(
-        r'https://img\.shields\.io/badge/Period-[^"]+',
-        _badge_range("Period", f"{start_year}--{end_year} · {num_rows} obs"),
-        text,
-    )
-    text = re.sub(
-        r'https://img\.shields\.io/badge/Main%20Strategy-[^"]+',
-        _badge("Main Strategy", f"Sharpe {SHARPE_STR} | MaxDD {MDD_STR}", "9853e6"),
+        r'https://img\.shields\.io/badge/[^"]+(?=" alt="Main%20Strategy")',
+        _badge("Main Strategy", f"Sharpe {sharpe_str} | MaxDD {mdd_str}", "9853e6"),
         text,
     )
 
