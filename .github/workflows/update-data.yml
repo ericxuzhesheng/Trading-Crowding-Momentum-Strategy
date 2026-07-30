@@ -17,6 +17,8 @@ jobs:
   update-data:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -39,7 +41,7 @@ jobs:
       - name: Commit updated data
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "chore: auto-update data $(date +%Y-%m-%d)"
+          commit_message: "chore: auto-update market data to latest"
           commit_options: "--no-verify"
           file_pattern: "data/processed/panel_daily.parquet outputs/figures/*.png outputs/tables/*.csv outputs/reports/backtest_report.md"
           skip_dirty_check: false
