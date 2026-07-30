@@ -28,15 +28,13 @@ def _fmt_pct(value: float) -> str:
 
 
 def _badge(label: str, msg: str, color: str = "4caf50") -> str:
-    """Build a shields.io badge URL with percent-encoded message."""
-    safe = msg.replace("%", "%25").replace(" ", "%20").replace("|", "%7C")
-    return f"https://img.shields.io/badge/{label}-{safe}-{color}?style=for-the-badge&labelColor=4a4f59"
+    """Build a shields.io badge URL — let the browser handle encoding."""
+    return f"https://img.shields.io/badge/{label}-{msg}-{color}?style=for-the-badge&labelColor=4a4f59"
 
 
 def _badge_range(label: str, msg: str, color: str = "4caf50") -> str:
-    """Like _badge but leaves '--' intact for year-range display."""
-    safe = msg.replace(" ", "%20").replace("|", "%7C").replace("%", "%25")
-    return f"https://img.shields.io/badge/{label}-{safe}-{color}?style=for-the-badge&labelColor=4a4f59"
+    """Like _badge but preserves '--' for year-range display."""
+    return f"https://img.shields.io/badge/{label}-{msg}-{color}?style=for-the-badge&labelColor=4a4f59"
 
 
 def _build_performance_table(summary: pd.DataFrame, lang: str) -> str:

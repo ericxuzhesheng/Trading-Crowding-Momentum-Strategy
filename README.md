@@ -10,8 +10,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/PYTHON-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=4a4f59" alt="Python">
   <img src="https://img.shields.io/badge/资产池-30只多资产ETF-f3c63f?style=for-the-badge&labelColor=4a4f59" alt="Universe">
-  <img src="https://img.shields.io/badge/评估区间-2018--2026%2520·%252054161条日频记录-4caf50?style=for-the-badge&labelColor=4a4f59" alt="Period">
-  <img src="https://img.shields.io/badge/主策略-Sharpe%200.72%20%7C%20MaxDD%20-18.77%25-9853e6?style=for-the-badge&labelColor=4a4f59" alt="Performance">
+  <img src="https://img.shields.io/badge/评估区间-2018--2026 · 54161条日频记录-4caf50?style=for-the-badge&labelColor=4a4f59" alt="Period">
+  <img src="https://img.shields.io/badge/主策略-Sharpe 0.72 | MaxDD -18.77%-9853e6?style=for-the-badge&labelColor=4a4f59" alt="Performance">
   <img src="https://img.shields.io/badge/LICENSE-MIT-111111?style=for-the-badge&labelColor=4a4f59" alt="MIT">
 </p>
 
