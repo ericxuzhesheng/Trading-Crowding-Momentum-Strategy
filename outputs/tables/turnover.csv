@@ -438,6 +438,7 @@
 2026-07-20,1.2000000000000002,0.0003600000000000001,momentum_top_quantile
 2026-07-27,1.0,0.0003,momentum_top_quantile
 2026-08-03,1.6000000000000005,0.0004800000000000002,momentum_top_quantile
+2026-08-10,1.8000000000000003,0.00054,momentum_top_quantile
 2018-01-08,0.0,0.0,crowding_top_quantile
 2018-01-15,0.0,0.0,crowding_top_quantile
 2018-01-22,0.0,0.0,crowding_top_quantile
@@ -877,6 +878,7 @@
 2026-07-20,0.8,0.00024000000000000003,crowding_top_quantile
 2026-07-27,0.8,0.00024000000000000003,crowding_top_quantile
 2026-08-03,0.6,0.00017999999999999998,crowding_top_quantile
+2026-08-10,1.0,0.0003,crowding_top_quantile
 2018-01-08,0.0,0.0,momentum_crowding_penalty
 2018-01-15,0.0,0.0,momentum_crowding_penalty
 2018-01-22,0.0,0.0,momentum_crowding_penalty
@@ -1316,6 +1318,7 @@
 2026-07-20,1.2000000000000002,0.0003600000000000001,momentum_crowding_penalty
 2026-07-27,0.7999999999999999,0.00023999999999999998,momentum_crowding_penalty
 2026-08-03,0.8,0.00024000000000000003,momentum_crowding_penalty
+2026-08-10,1.0,0.0003,momentum_crowding_penalty
 2018-01-08,0.0,0.0,momentum_crowding_penalty_trend
 2018-01-15,0.0,0.0,momentum_crowding_penalty_trend
 2018-01-22,0.0,0.0,momentum_crowding_penalty_trend
@@ -1755,3 +1758,4 @@
 2026-07-20,1.0,0.0003,momentum_crowding_penalty_trend
 2026-07-27,0.26666666666666666,8e-05,momentum_crowding_penalty_trend
 2026-08-03,0.26666666666666666,8e-05,momentum_crowding_penalty_trend
+2026-08-10,0.3333333333333333,0.0001,momentum_crowding_penalty_trend
