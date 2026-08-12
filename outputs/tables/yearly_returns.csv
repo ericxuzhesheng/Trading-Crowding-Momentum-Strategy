@@ -6,7 +6,7 @@
 2023,all_index_equal_weight,0.032871262812752766
 2024,all_index_equal_weight,0.19842755309042315
 2025,all_index_equal_weight,0.6417383961623366
-2026,all_index_equal_weight,0.0819715588233878
+2026,all_index_equal_weight,0.08703170880145517
 2019,crowding_top_quantile,0.1723675736290693
 2020,crowding_top_quantile,0.2418195253595954
 2021,crowding_top_quantile,0.13682588309786614
@@ -14,7 +14,7 @@
 2023,crowding_top_quantile,0.031885793523636075
 2024,crowding_top_quantile,0.18006286813995875
 2025,crowding_top_quantile,1.6707584420730242
-2026,crowding_top_quantile,0.2116999006975686
+2026,crowding_top_quantile,0.21156281606535066
 2019,csi300_etf_buy_hold,0.33899967309578094
 2020,csi300_etf_buy_hold,0.290771484375
 2021,csi300_etf_buy_hold,-0.05277094760734036
@@ -22,7 +22,7 @@
 2023,csi300_etf_buy_hold,-0.11147790756729203
 2024,csi300_etf_buy_hold,0.1494712775078586
 2025,csi300_etf_buy_hold,0.18175037294878083
-2026,csi300_etf_buy_hold,-0.005259835893120068
+2026,csi300_etf_buy_hold,-0.0010519671786239915
 2019,momentum_crowding_penalty,0.14930679227869237
 2020,momentum_crowding_penalty,0.34051662476618483
 2021,momentum_crowding_penalty,0.17469994980014025
@@ -30,7 +30,7 @@
 2023,momentum_crowding_penalty,-0.042021604809797775
 2024,momentum_crowding_penalty,0.23216060524752313
 2025,momentum_crowding_penalty,0.2342156694394033
-2026,momentum_crowding_penalty,0.1572665323286524
+2026,momentum_crowding_penalty,0.15933555744919192
 2019,momentum_crowding_penalty_trend,0.09770543939771925
 2020,momentum_crowding_penalty_trend,0.25335197590152636
 2021,momentum_crowding_penalty_trend,0.11594614733435127
@@ -38,7 +38,7 @@
 2023,momentum_crowding_penalty_trend,-0.04816438088777897
 2024,momentum_crowding_penalty_trend,0.07626532375440531
 2025,momentum_crowding_penalty_trend,0.22215567655468216
-2026,momentum_crowding_penalty_trend,0.1735346446392192
+2026,momentum_crowding_penalty_trend,0.17423401468975164
 2019,momentum_top_quantile,0.13002597621811707
 2020,momentum_top_quantile,0.31249800940605343
 2021,momentum_top_quantile,0.06640954085154283
@@ -46,4 +46,4 @@
 2023,momentum_top_quantile,-0.014106138649931377
 2024,momentum_top_quantile,0.23620744152182116
 2025,momentum_top_quantile,0.19897718236833817
-2026,momentum_top_quantile,0.052891796179751926
+2026,momentum_top_quantile,0.06087751739871616
