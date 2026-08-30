@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/Universe-30%20Multi--Asset%20ETFs-f3c63f?style=for-the-badge&labelColor=4a4f59" alt="Universe">
   <img src="https://img.shields.io/badge/Period-2018%E2%80%932026%20%C2%B7%2054821%20obs-4caf50?style=for-the-badge&labelColor=4a4f59" alt="Period">
   <img src="https://img.shields.io/badge/Main%20Strategy-Sharpe%201.19%20%7C%20MaxDD%20--11.54%25-9853e6?style=for-the-badge&labelColor=4a4f59" alt="Main Strategy">
-  <img src="https://img.shields.io/badge/PYTHON-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=4a4f59" alt="Python">
+  <img src="https://img.shields.io/badge/PYTHON-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=4a4f59" alt="Python">
   <img src="https://img.shields.io/badge/LICENSE-MIT-111111?style=for-the-badge&labelColor=4a4f59" alt="MIT">
 </p>
 
@@ -58,6 +58,23 @@
 - 优化器使用 15% 单 ETF 上限与 750 bp-equivalent 的 L1 换手正则；后者是控制交易稳定性的正则强度，不是实际交易费率。
 <!-- OPTIMIZED_SUMMARY_ZH_END -->
 
+### 交易成本敏感性
+
+<!-- COST_SENSITIVITY_ZH_START -->
+以下情景保持信号和目标权重不变，仅按计划调仓日的完整 L1 成交名义本金重算成本。
+
+| 每单位成交成本 | 口径 | 年化收益 | 年化波动 | Sharpe | 最大回撤 | 最终净值 |
+|---:|:---|---:|---:|---:|---:|---:|
+| 0 bps | 情景 | 14.84% | 12.12% | 1.246 | -11.36% | 3.311 |
+| 1 bps | 情景 | 14.60% | 12.11% | 1.229 | -11.42% | 3.252 |
+| 2 bps | 情景 | 14.37% | 12.11% | 1.211 | -11.48% | 3.195 |
+| 3 bps | 基准 | 14.13% | 12.11% | 1.194 | -11.54% | 3.139 |
+| 5 bps | 情景 | 13.67% | 12.11% | 1.159 | -11.67% | 3.029 |
+| 10 bps | 情景 | 12.50% | 12.10% | 1.071 | -11.98% | 2.771 |
+<!-- COST_SENSITIVITY_ZH_END -->
+
+成本率按每单位模拟成交名义本金收取，而换手采用完整 L1 口径 `sum(abs(w_target - w_previous))`。因此从现金建仓至 100% 仓位的换手为 1，从一个满仓组合完全切换到另一个满仓组合的换手为 2，后者会同时计入卖出和买入两侧成本。3 bps 是基准回测假设，不是券商佣金报价，也不同于优化器的 750 bp-equivalent 换手正则。
+
 ### 策略逻辑
 
 默认资产池来自 Relaxed Risk Parity 项目的 30 只 ETF，包括可转债、国债、信用债、货币、沪深300、中证500、中证1000、创业板、红利、半导体、人工智能、机器人、新能源、中韩半导体、科创50、云计算、证券、军工、消费、恒生、白银、纳指、标普500、日经225、欧洲、黄金、有色、豆粕、煤炭、原油。
@@ -93,7 +110,7 @@ subject to  sum(w) = target_exposure
 - `alpha` 是横截面标准化后的滞后综合得分，保留“动量减拥挤度”的经济含义。
 - `Sigma` 只使用信号日及以前的滚动收益估计，并经过对角收缩和特征值下限处理，保证数值上半正定。
 - `q_i` 是可选的拥挤集中度项；默认设为 0，因为综合 alpha 已经包含 `-0.65 * crowding`，避免双重惩罚。
-- 默认 750 bp-equivalent 的 L1 系数是换手正则强度，不是交易费假设；回测实际仍按单边 3 bps 扣费。
+- 默认 750 bp-equivalent 的 L1 系数是换手正则强度，不是交易费假设；基准回测按每单位成交名义本金 3 bps 扣费。
 - `allow_cash`、硬换手上限和事前波动率上限均为可选凸约束；它们能进一步降风险，但当前验证中没有提高 Sharpe，因此默认关闭。
 - 当有效资产不足时，目标暴露自动取 `min(exposure, n_valid * max_weight)`；求解失败时确定性回退到原等权选择器，并在 `turnover.csv` 留下状态。
 
@@ -135,8 +152,9 @@ python run_pipeline.py --config config.yaml
 - `outputs/tables/factor_values.csv`：因子与滞后信号
 - `outputs/tables/portfolio_nav.csv`：各策略净值
 - `outputs/tables/weekly_weights.csv`：每周调仓权重
-- `outputs/tables/turnover.csv`：换手率、交易成本、求解状态、目标函数分解、事前波动率和约束松弛量
+- `outputs/tables/turnover.csv`：完整 L1 换手、交易成本、求解状态、目标函数分解、事前波动率和约束松弛量
 - `outputs/tables/performance_summary.csv`：绩效汇总
+- `outputs/tables/transaction_cost_sensitivity.csv`：固定信号和目标权重下的交易成本敏感性
 - `outputs/tables/yearly_returns.csv`：年度收益
 - `outputs/tables/monthly_returns.csv`：月度收益
 - `outputs/reports/backtest_report.md`：自动生成的回测报告
@@ -147,12 +165,15 @@ python run_pipeline.py --config config.yaml
 
 ![Drawdown](outputs/figures/drawdown.png)
 
+![Transaction-cost sensitivity](outputs/figures/transaction_cost_sensitivity.png)
+
 更多图表：
 
 - `outputs/figures/yearly_returns.png`
 - `outputs/figures/monthly_return_heatmap.png`
 - `outputs/figures/holding_count.png`
 - `outputs/figures/turnover.png`
+- `outputs/figures/transaction_cost_sensitivity.png`
 - `outputs/figures/factor_ic.png`
 
 ### 项目结构
@@ -177,7 +198,8 @@ trading-crowding-momentum-strategy/
 
 - ETF 换手率仍然不是完美的拥挤度代理，因此拥挤度会同时使用成交额、成交量异常作为替代。
 - 当前资产池有 30 只 ETF，比最初指数版本更宽，但对横截面研究来说仍然不算大。
-- 交易成本用 3bp 单边成本近似；10bp 压力测试仍可接受，但 20bp 时优势明显收窄，尚未建模冲击成本和容量。
+- 基准成本为每单位成交名义本金 3 bps；0/1/2/3/5/10 bps 情景只重算计划调仓成本，尚未用逐笔盘口数据建模价差、冲击和容量。
+- 当前向量化回测把目标权重视为调仓间的固定日度暴露，并按计划目标权重变化计费；它不是持仓份额自然漂移后的逐笔成交模拟。
 - 2018–2022 参数选择段和 2023+ 时间留出段的聚合 Sharpe 均超过 1，但较短市场阶段仍可能显著低于 1，统计证据并不等于实盘保证。
 - 750 bp-equivalent 是基于历史稳定性选择的换手正则，不应解释为可观测的真实交易成本。
 - 30 只 ETF 的横截面仍较小，且拥挤度代理主要来自成交数据；未来应加入份额、资金流和融资数据。
@@ -227,6 +249,23 @@ Takeaways:
 - The optimizer uses a 15% ETF cap and 750 bp-equivalent L1 turnover regularizer. The latter is a stability penalty, not the realized transaction-cost assumption.
 <!-- OPTIMIZED_SUMMARY_EN_END -->
 
+### Transaction-Cost Sensitivity
+
+<!-- COST_SENSITIVITY_EN_START -->
+These scenarios hold signals and target weights fixed and only reprice gross L1 traded notional on scheduled rebalance dates.
+
+| Cost per Traded Notional | Case | Annual Return | Annual Vol | Sharpe | Max Drawdown | Final NAV |
+|---:|:---|---:|---:|---:|---:|---:|
+| 0 bps | Scenario | 14.84% | 12.12% | 1.246 | -11.36% | 3.311 |
+| 1 bps | Scenario | 14.60% | 12.11% | 1.229 | -11.42% | 3.252 |
+| 2 bps | Scenario | 14.37% | 12.11% | 1.211 | -11.48% | 3.195 |
+| 3 bps | Base | 14.13% | 12.11% | 1.194 | -11.54% | 3.139 |
+| 5 bps | Scenario | 13.67% | 12.11% | 1.159 | -11.67% | 3.029 |
+| 10 bps | Scenario | 12.50% | 12.10% | 1.071 | -11.98% | 2.771 |
+<!-- COST_SENSITIVITY_EN_END -->
+
+The rate is charged per unit of traded notional, while turnover uses the full L1 definition `sum(abs(w_target - w_previous))`. Moving from cash to a fully invested portfolio has turnover 1; completely replacing one fully invested portfolio with another has turnover 2 and charges both sell and buy legs. The 3 bps base case is a backtest assumption, not a broker quote, and is separate from the optimizer's 750 bp-equivalent turnover regularizer.
+
 ### Strategy Logic
 
 The default universe comes from the Relaxed Risk Parity project and includes 30 ETFs: convertible bond, government bond, credit bond, money market, CSI 300, CSI 500, CSI 1000, ChiNext, dividend, semiconductor, AI, robotics, new energy, China-Korea semiconductor, STAR 50, cloud computing, securities, defense, consumption, Hang Seng, silver, Nasdaq 100, S&P 500, Nikkei 225, Europe, gold, nonferrous metals, soybean meal, coal, and crude oil.
@@ -262,8 +301,8 @@ subject to  sum(w) = target_exposure
 `alpha` is the standardized lagged crowding-adjusted momentum score. `Sigma` uses only trailing returns available
 on the signal date and is made numerically positive semidefinite through diagonal shrinkage and an eigenvalue floor.
 The `q_i` concentration term is optional and defaults to zero because crowding already enters alpha. The 750
-bp-equivalent L1 coefficient is a stability regularizer, not the realized fee assumption; the backtest charges 3 bps
-one-way. Cash, hard turnover, and ex-ante volatility limits remain optional convex controls. Capacity is handled with
+bp-equivalent L1 coefficient is a stability regularizer, not the realized fee assumption; the base backtest charges
+3 bps per unit of traded notional. Cash, hard turnover, and ex-ante volatility limits remain optional convex controls. Capacity is handled with
 `min(exposure, n_valid * max_weight)`, and deterministic fallbacks plus objective diagnostics are recorded in `turnover.csv`.
 
 ### Data Sources
@@ -302,8 +341,9 @@ python run_pipeline.py --config config.yaml
 - `outputs/tables/factor_values.csv`: factor values and lagged signals
 - `outputs/tables/portfolio_nav.csv`: strategy NAV series
 - `outputs/tables/weekly_weights.csv`: weekly rebalance weights
-- `outputs/tables/turnover.csv`: turnover, costs, solver status, objective components, ex-ante volatility, and constraint slack
+- `outputs/tables/turnover.csv`: gross L1 turnover, costs, solver status, objective components, ex-ante volatility, and constraint slack
 - `outputs/tables/performance_summary.csv`: performance summary
+- `outputs/tables/transaction_cost_sensitivity.csv`: fixed-signal, fixed-target transaction-cost scenarios
 - `outputs/tables/yearly_returns.csv`: annual returns
 - `outputs/tables/monthly_returns.csv`: monthly returns
 - `outputs/reports/backtest_report.md`: generated backtest report
@@ -314,19 +354,23 @@ python run_pipeline.py --config config.yaml
 
 ![Drawdown](outputs/figures/drawdown.png)
 
+![Transaction-cost sensitivity](outputs/figures/transaction_cost_sensitivity.png)
+
 More figures:
 
 - `outputs/figures/yearly_returns.png`
 - `outputs/figures/monthly_return_heatmap.png`
 - `outputs/figures/holding_count.png`
 - `outputs/figures/turnover.png`
+- `outputs/figures/transaction_cost_sensitivity.png`
 - `outputs/figures/factor_ic.png`
 
 ### Limitations
 
 - ETF turnover is still an imperfect crowding proxy, so traded value and volume abnormality are used alongside turnover.
 - The current universe has 30 ETFs, which is broader than the first index-only version but still limited for cross-sectional research.
-- Transaction cost is approximated at 3 bps one-way. A 10-bp stress remains acceptable, while the edge narrows materially at 20 bps; impact and capacity are not fully modeled.
+- The base cost is 3 bps per unit of traded notional. The 0/1/2/3/5/10 bps scenarios only reprice scheduled target changes; bid-ask spread, market impact, and capacity are not estimated from order-book data.
+- The vectorized backtest treats target weights as constant daily exposures between scheduled changes and charges changes in target weights; it is not a drift-aware share-level execution simulation.
 - Aggregate Sharpe exceeds 1 in both the 2018–2022 selection period and the 2023+ temporal holdout, but shorter regimes can remain well below 1. This is backtest evidence, not a live-performance promise.
 - The 750 bp-equivalent turnover coefficient is a historical regularization choice, not an observable trading fee.
 - The 30-ETF cross-section and turnover-based crowding proxies remain limited; ETF shares, flows, financing, and richer capacity data are natural extensions.

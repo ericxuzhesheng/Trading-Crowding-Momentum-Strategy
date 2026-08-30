@@ -52,6 +52,7 @@ strategy:
   top_quantile: 0.3
   max_weight: 0.10
   transaction_cost_bps: 3
+  transaction_cost_sensitivity_bps: [0, 1, 2, 3, 5, 10]
   benchmark_symbol: "510300.SH"
   benchmark_ma_window: 200
   risk_on_exposure: 1.0

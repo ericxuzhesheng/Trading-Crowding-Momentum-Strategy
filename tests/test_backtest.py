@@ -1,10 +1,11 @@
 """Unit tests for backtest and performance behavior."""
 
 import pandas as pd
+import pytest
 
 from src.backtest import build_daily_weights, calculate_transaction_cost, run_single_strategy
 from src.factors import add_factors
-from src.performance import max_drawdown, summarize_performance
+from src.performance import max_drawdown, summarize_performance, transaction_cost_sensitivity
 
 
 def test_max_drawdown() -> None:
@@ -14,7 +15,7 @@ def test_max_drawdown() -> None:
 
 
 def test_transaction_cost_calculation() -> None:
-    """A 50 percent one-way turnover at 3 bps costs 0.00015 NAV units."""
+    """An L1 traded notional of 0.5 at 3 bps costs 0.00015 NAV units."""
     assert calculate_transaction_cost(0.5, 3) == 0.00015
 
 
@@ -34,6 +35,66 @@ def test_sharpe_uses_arithmetic_excess_return_definition() -> None:
     daily_rf = (1.02 ** (1 / 252)) - 1
     expected = (returns.mean() - daily_rf) / returns.std(ddof=0) * (252**0.5)
     assert abs(summary["sharpe"] - expected) < 1e-12
+
+
+def test_transaction_cost_sensitivity_reprices_fixed_weights() -> None:
+    """The base scenario should reproduce NAV while zero cost restores gross returns."""
+    dates = pd.date_range("2024-01-01", periods=4, freq="B")
+    gross_returns = pd.Series([0.0, 0.01, -0.005, 0.002])
+    daily_turnover = pd.Series([0.0, 0.5, 0.0, 1.0])
+    base_cost = daily_turnover * 3.0 / 10000.0
+    net_returns = gross_returns - base_cost
+    nav = pd.DataFrame(
+        {
+            "date": dates,
+            "strategy": "test",
+            "return": net_returns,
+            "nav": (1.0 + net_returns).cumprod(),
+        }
+    )
+    turnover = pd.DataFrame(
+        {
+            "date": dates[daily_turnover > 0],
+            "strategy": "test",
+            "turnover": daily_turnover[daily_turnover > 0].to_numpy(),
+            "transaction_cost": base_cost[daily_turnover > 0].to_numpy(),
+        }
+    )
+
+    sensitivity = transaction_cost_sensitivity(
+        nav,
+        turnover,
+        strategy="test",
+        base_cost_bps=3.0,
+        scenarios_bps=[3.0, 0.0, 10.0, 3.0],
+    )
+    base = sensitivity[sensitivity["transaction_cost_bps"] == 3.0].iloc[0]
+    zero = sensitivity[sensitivity["transaction_cost_bps"] == 0.0].iloc[0]
+    original = summarize_performance(nav, turnover).iloc[0]
+
+    assert sensitivity["transaction_cost_bps"].tolist() == [0.0, 3.0, 10.0]
+    assert sensitivity["is_base_case"].tolist() == [False, True, False]
+    assert base["final_nav"] == pytest.approx(original["final_nav"])
+    assert base["sharpe"] == pytest.approx(original["sharpe"])
+    assert zero["final_nav"] == pytest.approx(float((1.0 + gross_returns).prod()))
+    assert base["total_transaction_cost"] == pytest.approx(float(base_cost.sum()))
+
+    with pytest.raises(ValueError, match="non-negative"):
+        transaction_cost_sensitivity(
+            nav,
+            turnover,
+            strategy="test",
+            base_cost_bps=3.0,
+            scenarios_bps=[-1.0],
+        )
+    with pytest.raises(ValueError, match="finite"):
+        transaction_cost_sensitivity(
+            nav,
+            turnover,
+            strategy="test",
+            base_cost_bps=3.0,
+            scenarios_bps=[float("nan")],
+        )
 
 
 def test_no_lookahead_basic_check() -> None:

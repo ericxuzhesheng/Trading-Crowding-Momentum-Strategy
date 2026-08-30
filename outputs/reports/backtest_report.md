@@ -28,13 +28,28 @@ Sharpe uses annualized arithmetic daily excess returns: `sqrt(252) * mean(r - rf
 
 These are historical backtests, not a guarantee that Sharpe will remain above 1 in every market regime.
 
+## Transaction-Cost Sensitivity
+
+| Cost per Traded Notional   | Case     | Annual Return   | Annual Vol   |   Sharpe | Max Drawdown   |   Final NAV |
+|:---------------------------|:---------|:----------------|:-------------|---------:|:---------------|------------:|
+| 0 bps                      | Scenario | 14.84%          | 12.12%       |    1.246 | -11.36%        |       3.311 |
+| 1 bps                      | Scenario | 14.60%          | 12.11%       |    1.229 | -11.42%        |       3.252 |
+| 2 bps                      | Scenario | 14.37%          | 12.11%       |    1.211 | -11.48%        |       3.195 |
+| 3 bps                      | Base     | 14.13%          | 12.11%       |    1.194 | -11.54%        |       3.139 |
+| 5 bps                      | Scenario | 13.67%          | 12.11%       |    1.159 | -11.67%        |       3.029 |
+| 10 bps                     | Scenario | 12.50%          | 12.10%       |    1.071 | -11.98%        |       2.771 |
+
+Each rate is charged per unit of gross L1 traded notional. A complete switch from one fully invested portfolio to another has L1 turnover of 2.0 and therefore charges both sell and buy legs.
+
+The scenarios hold signals and target weights fixed under the current backtest convention; they reprice scheduled target changes rather than re-optimizing the portfolio.
+
 ## Convex Optimizer Defaults
 
 - Maximum ETF weight: 15%
 - Covariance window / shrinkage: 120 days / 10%
 - Risk aversion: 4
 - L1 turnover regularization: 750 bp-equivalent (a regularizer, not realized trading cost)
-- Realized transaction-cost assumption: 3 bps one-way
+- Base execution-cost assumption: 3 bps per traded notional
 
 ## Data Diagnostics
 
@@ -48,4 +63,5 @@ No provider-level data failures were recorded.
 - `outputs/figures/monthly_return_heatmap.png`
 - `outputs/figures/holding_count.png`
 - `outputs/figures/turnover.png`
+- `outputs/figures/transaction_cost_sensitivity.png`
 - `outputs/figures/factor_ic.png` when enough cross-sectional observations exist

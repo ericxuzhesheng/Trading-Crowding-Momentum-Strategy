@@ -11,6 +11,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from matplotlib.ticker import PercentFormatter
 
 from .strategy_metadata import strategy_label
 
@@ -104,9 +105,33 @@ def plot_turnover(turnover: pd.DataFrame, figures_dir: str | Path) -> None:
     plt.figure(figsize=(12, 5))
     ax = sns.lineplot(data=plot_data, x="date", y="turnover", hue="strategy_label")
     plt.title("Turnover")
-    ax.set(xlabel="Date", ylabel="One-Way Turnover")
+    ax.set(xlabel="Date", ylabel="L1 Turnover")
     ax.legend(title="Strategy")
     _save_current(Path(figures_dir) / "turnover.png")
+
+
+def plot_transaction_cost_sensitivity(
+    sensitivity: pd.DataFrame,
+    figures_dir: str | Path,
+    base_cost_bps: float,
+) -> None:
+    """Plot Sharpe and annual return under alternative execution-cost assumptions."""
+    if sensitivity.empty:
+        return
+    data = sensitivity.sort_values("transaction_cost_bps")
+    _, axes = plt.subplots(1, 2, figsize=(10, 4))
+    sns.lineplot(data=data, x="transaction_cost_bps", y="sharpe", marker="o", ax=axes[0])
+    axes[0].axhline(1.0, color="gray", linestyle="--", linewidth=1, label="Sharpe = 1")
+    axes[0].axvline(base_cost_bps, color="black", linestyle=":", linewidth=1, label="Base cost")
+    axes[0].set(title="Standard Sharpe", xlabel="Cost per Traded Notional (bps)", ylabel="Sharpe")
+    axes[0].legend()
+
+    sns.lineplot(data=data, x="transaction_cost_bps", y="annual_return", marker="o", ax=axes[1])
+    axes[1].axvline(base_cost_bps, color="black", linestyle=":", linewidth=1)
+    axes[1].yaxis.set_major_formatter(PercentFormatter(1.0))
+    axes[1].set(title="Annualized Return", xlabel="Cost per Traded Notional (bps)", ylabel="Return")
+    plt.suptitle("Transaction-Cost Sensitivity (Fixed Weights)")
+    _save_current(Path(figures_dir) / "transaction_cost_sensitivity.png")
 
 
 def plot_factor_ic(factors: pd.DataFrame, figures_dir: str | Path) -> pd.DataFrame:
@@ -129,7 +154,16 @@ def plot_factor_ic(factors: pd.DataFrame, figures_dir: str | Path) -> pd.DataFra
     return ic
 
 
-def make_all_plots(nav_df: pd.DataFrame, weights: pd.DataFrame, turnover: pd.DataFrame, factors: pd.DataFrame, monthly: pd.DataFrame, yearly: pd.DataFrame, config: dict) -> pd.DataFrame:
+def make_all_plots(
+    nav_df: pd.DataFrame,
+    weights: pd.DataFrame,
+    turnover: pd.DataFrame,
+    factors: pd.DataFrame,
+    monthly: pd.DataFrame,
+    yearly: pd.DataFrame,
+    config: dict,
+    cost_sensitivity: pd.DataFrame | None = None,
+) -> pd.DataFrame:
     """Generate all configured figures and return IC diagnostics."""
     figures_dir = config["outputs"]["figures_dir"]
     plot_nav(nav_df, figures_dir)
@@ -138,4 +172,10 @@ def make_all_plots(nav_df: pd.DataFrame, weights: pd.DataFrame, turnover: pd.Dat
     plot_monthly_heatmap(monthly, figures_dir, config["strategy"].get("primary_strategy", "momentum_crowding_convex"))
     plot_holding_count(weights, figures_dir)
     plot_turnover(turnover, figures_dir)
+    if cost_sensitivity is not None:
+        plot_transaction_cost_sensitivity(
+            cost_sensitivity,
+            figures_dir,
+            float(config["strategy"]["transaction_cost_bps"]),
+        )
     return plot_factor_ic(factors, figures_dir)

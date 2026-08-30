@@ -96,3 +96,114 @@ def summarize_period_performance(
     period_nav = period_nav.copy()
     period_nav["nav"] = period_nav.groupby("strategy")["return"].transform(lambda values: (1.0 + values).cumprod())
     return summarize_performance(period_nav, period_turnover, risk_free_rate=risk_free_rate)
+
+
+def transaction_cost_sensitivity(
+    nav_df: pd.DataFrame,
+    turnover_df: pd.DataFrame,
+    *,
+    strategy: str,
+    base_cost_bps: float,
+    scenarios_bps: list[float] | tuple[float, ...],
+    risk_free_rate: float = 0.0,
+) -> pd.DataFrame:
+    """Reprice one strategy under alternative per-notional costs with fixed weights.
+
+    Turnover is the full L1 traded notional, so replacing one fully invested
+    portfolio with another can reach 2.0 and naturally charges both trade legs.
+    """
+    base_cost = float(base_cost_bps)
+    scenarios = sorted({float(value) for value in scenarios_bps})
+    if not np.isfinite(base_cost) or any(not np.isfinite(value) for value in scenarios):
+        raise ValueError("Transaction-cost assumptions must be finite.")
+    if base_cost < 0.0 or any(value < 0.0 for value in scenarios):
+        raise ValueError("Transaction-cost assumptions must be non-negative.")
+    if not scenarios:
+        raise ValueError("At least one transaction-cost scenario is required.")
+
+    selected_nav = nav_df[nav_df["strategy"] == strategy].copy()
+    if selected_nav.empty:
+        raise ValueError(f"Strategy '{strategy}' is missing from the NAV table.")
+    selected_nav["date"] = pd.to_datetime(selected_nav["date"])
+    selected_nav = selected_nav.sort_values("date")
+    if selected_nav["date"].duplicated().any():
+        raise ValueError(f"Strategy '{strategy}' has duplicate NAV dates.")
+    required_turnover_columns = {"date", "strategy", "turnover"}
+    if not turnover_df.empty and not required_turnover_columns.issubset(turnover_df.columns):
+        missing = sorted(required_turnover_columns.difference(turnover_df.columns))
+        raise ValueError(f"Turnover table is missing required columns: {missing}")
+
+    selected_turnover = turnover_df[turnover_df["strategy"] == strategy].copy()
+    if selected_turnover.empty:
+        daily_costs = pd.DataFrame(columns=["date", "turnover", "recorded_transaction_cost"])
+    else:
+        selected_turnover["date"] = pd.to_datetime(selected_turnover["date"])
+        selected_turnover["turnover"] = pd.to_numeric(selected_turnover["turnover"], errors="coerce")
+        if not np.isfinite(selected_turnover["turnover"]).all():
+            raise ValueError("L1 turnover must contain only finite values.")
+        if (selected_turnover["turnover"] < 0.0).any():
+            raise ValueError("L1 turnover must be non-negative.")
+        if "transaction_cost" in selected_turnover:
+            selected_turnover["recorded_transaction_cost"] = pd.to_numeric(
+                selected_turnover["transaction_cost"], errors="coerce"
+            ).fillna(selected_turnover["turnover"] * base_cost / 10000.0)
+        else:
+            selected_turnover["recorded_transaction_cost"] = selected_turnover["turnover"] * base_cost / 10000.0
+        daily_costs = (
+            selected_turnover.groupby("date", as_index=False)[["turnover", "recorded_transaction_cost"]]
+            .sum()
+            .sort_values("date")
+        )
+        unknown_dates = daily_costs.loc[~daily_costs["date"].isin(selected_nav["date"]), "date"]
+        if not unknown_dates.empty:
+            raise ValueError("Turnover table contains dates outside the selected NAV series.")
+        expected_cost = daily_costs["turnover"] * base_cost / 10000.0
+        if not np.allclose(
+            daily_costs["recorded_transaction_cost"],
+            expected_cost,
+            rtol=1e-9,
+            atol=1e-12,
+        ):
+            raise ValueError("Recorded transaction costs do not match base_cost_bps and L1 turnover.")
+
+    repriced = selected_nav.merge(daily_costs, on="date", how="left")
+    repriced[["turnover", "recorded_transaction_cost"]] = repriced[
+        ["turnover", "recorded_transaction_cost"]
+    ].fillna(0.0)
+    gross_return = repriced["return"].fillna(0.0) + repriced["recorded_transaction_cost"]
+
+    rows = []
+    for cost_bps in scenarios:
+        scenario_return = gross_return - repriced["turnover"] * cost_bps / 10000.0
+        if (scenario_return <= -1.0).any():
+            raise ValueError(f"The {cost_bps:g} bps scenario contains a daily return at or below -100%.")
+        scenario_nav = repriced[["date", "strategy"]].copy()
+        scenario_nav["return"] = scenario_return
+        scenario_nav["nav"] = (1.0 + scenario_return).cumprod()
+
+        scenario_turnover = daily_costs[["date", "turnover"]].copy()
+        scenario_turnover["strategy"] = strategy
+        scenario_turnover["transaction_cost"] = scenario_turnover["turnover"] * cost_bps / 10000.0
+        metrics = summarize_performance(
+            scenario_nav,
+            scenario_turnover,
+            risk_free_rate=risk_free_rate,
+        ).iloc[0]
+        rows.append(
+            {
+                "strategy": strategy,
+                "transaction_cost_bps": cost_bps,
+                "is_base_case": bool(np.isclose(cost_bps, base_cost)),
+                "annual_return": metrics["annual_return"],
+                "annual_volatility": metrics["annual_volatility"],
+                "sharpe": metrics["sharpe"],
+                "return_over_volatility": metrics["return_over_volatility"],
+                "max_drawdown": metrics["max_drawdown"],
+                "calmar": metrics["calmar"],
+                "win_rate": metrics["win_rate"],
+                "average_turnover": metrics["average_turnover"],
+                "total_transaction_cost": metrics["total_transaction_cost"],
+                "final_nav": metrics["final_nav"],
+            }
+        )
+    return pd.DataFrame(rows)

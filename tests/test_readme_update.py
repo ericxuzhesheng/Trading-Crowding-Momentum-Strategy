@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 from scripts.update_readme import update_readme
-from src.performance import summarize_performance
+from src.performance import summarize_performance, transaction_cost_sensitivity
 
 
 def test_readme_update_uses_configured_convex_primary(tmp_path: Path) -> None:
@@ -39,6 +39,8 @@ def test_readme_update_uses_configured_convex_primary(tmp_path: Path) -> None:
     config = {
         "strategy": {
             "primary_strategy": "momentum_crowding_convex",
+            "transaction_cost_bps": 3,
+            "transaction_cost_sensitivity_bps": [0, 1, 2, 3, 5, 10],
             "convex_optimizer": {"max_weight": 0.15, "turnover_penalty_bps": 750},
         },
         "performance": {"risk_free_rate": 0.0, "validation_split_date": "2023-01-01"},
@@ -56,6 +58,9 @@ def test_readme_update_uses_configured_convex_primary(tmp_path: Path) -> None:
                 "<!-- OPTIMIZED_SUMMARY_ZH_START -->",
                 "old",
                 "<!-- OPTIMIZED_SUMMARY_ZH_END -->",
+                "<!-- COST_SENSITIVITY_ZH_START -->",
+                "old",
+                "<!-- COST_SENSITIVITY_ZH_END -->",
                 "The latest real-data run covers 2020-01-01 to 2020-01-02, with 1 ETFs and 2 daily observations.",
                 "| Strategy | Annual Return | Annual Vol | Sharpe | Max Drawdown | Final NAV |",
                 "|:--|--:|--:|--:|--:|--:|",
@@ -63,12 +68,24 @@ def test_readme_update_uses_configured_convex_primary(tmp_path: Path) -> None:
                 "<!-- OPTIMIZED_SUMMARY_EN_START -->",
                 "old",
                 "<!-- OPTIMIZED_SUMMARY_EN_END -->",
+                "<!-- COST_SENSITIVITY_EN_START -->",
+                "old",
+                "<!-- COST_SENSITIVITY_EN_END -->",
             ]
         ),
         encoding="utf-8",
     )
-    updated = update_readme(readme, summary, panel, nav_df, turnover_df, config)
+    sensitivity = transaction_cost_sensitivity(
+        nav_df,
+        turnover_df,
+        strategy="momentum_crowding_convex",
+        base_cost_bps=3,
+        scenarios_bps=[0, 1, 2, 3, 5, 10],
+    )
+    updated = update_readme(readme, summary, panel, nav_df, turnover_df, sensitivity, config)
     assert "Main%20Strategy-Sharpe" in updated
     assert "凸优化动量 - 拥挤度" in updated
     assert "Convex Mom-Crowding" in updated
+    assert "| 3 bps | 基准" in updated
+    assert "| 10 bps | Scenario" in updated
     assert "| old |" not in updated

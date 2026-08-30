@@ -57,6 +57,51 @@ def _build_performance_table(summary: pd.DataFrame, language: str) -> str:
     return "\n".join(lines)
 
 
+def _build_cost_sensitivity_table(
+    sensitivity: pd.DataFrame,
+    language: str,
+    base_cost_bps: float,
+) -> str:
+    """Render fixed-weight transaction-cost scenarios as Markdown."""
+    data = sensitivity.sort_values("transaction_cost_bps")
+    if language == "zh":
+        lines = [
+            "以下情景保持信号和目标权重不变，仅按计划调仓日的完整 L1 成交名义本金重算成本。",
+            "",
+            "| 每单位成交成本 | 口径 | 年化收益 | 年化波动 | Sharpe | 最大回撤 | 最终净值 |",
+            "|---:|:---|---:|---:|---:|---:|---:|",
+        ]
+        for _, row in data.iterrows():
+            case = "基准" if abs(float(row["transaction_cost_bps"]) - base_cost_bps) < 1e-12 else "情景"
+            lines.append(
+                f"| {float(row['transaction_cost_bps']):g} bps | {case} "
+                f"| {_fmt_pct(float(row['annual_return']))} "
+                f"| {_fmt_pct(float(row['annual_volatility']))} "
+                f"| {float(row['sharpe']):.3f} "
+                f"| {_fmt_pct(float(row['max_drawdown']))} "
+                f"| {float(row['final_nav']):.3f} |"
+            )
+        return "\n".join(lines)
+
+    lines = [
+        "These scenarios hold signals and target weights fixed and only reprice gross L1 traded notional on scheduled rebalance dates.",
+        "",
+        "| Cost per Traded Notional | Case | Annual Return | Annual Vol | Sharpe | Max Drawdown | Final NAV |",
+        "|---:|:---|---:|---:|---:|---:|---:|",
+    ]
+    for _, row in data.iterrows():
+        case = "Base" if abs(float(row["transaction_cost_bps"]) - base_cost_bps) < 1e-12 else "Scenario"
+        lines.append(
+            f"| {float(row['transaction_cost_bps']):g} bps | {case} "
+            f"| {_fmt_pct(float(row['annual_return']))} "
+            f"| {_fmt_pct(float(row['annual_volatility']))} "
+            f"| {float(row['sharpe']):.3f} "
+            f"| {_fmt_pct(float(row['max_drawdown']))} "
+            f"| {float(row['final_nav']):.3f} |"
+        )
+    return "\n".join(lines)
+
+
 def _selected_row(summary: pd.DataFrame, strategy: str) -> pd.Series:
     selected = summary[summary["strategy"] == strategy]
     if selected.empty:
@@ -130,6 +175,7 @@ def update_readme(
     panel: pd.DataFrame,
     nav: pd.DataFrame,
     turnover: pd.DataFrame,
+    cost_sensitivity: pd.DataFrame,
     config: dict,
 ) -> str:
     """Return README content synchronized with the latest generated outputs."""
@@ -182,6 +228,17 @@ def update_readme(
     )
     text = _replace_marked_block(text, "OPTIMIZED_SUMMARY_ZH", _build_dynamic_summary(summary, nav, turnover, config, "zh"))
     text = _replace_marked_block(text, "OPTIMIZED_SUMMARY_EN", _build_dynamic_summary(summary, nav, turnover, config, "en"))
+    base_cost_bps = float(config["strategy"]["transaction_cost_bps"])
+    text = _replace_marked_block(
+        text,
+        "COST_SENSITIVITY_ZH",
+        _build_cost_sensitivity_table(cost_sensitivity, "zh", base_cost_bps),
+    )
+    text = _replace_marked_block(
+        text,
+        "COST_SENSITIVITY_EN",
+        _build_cost_sensitivity_table(cost_sensitivity, "en", base_cost_bps),
+    )
     return text
 
 
@@ -191,7 +248,8 @@ if __name__ == "__main__":
     panel = pd.read_parquet(REPO_ROOT / "data" / "processed" / "panel_daily.parquet")
     nav = pd.read_csv(REPO_ROOT / "outputs" / "tables" / "portfolio_nav.csv", parse_dates=["date"])
     turnover = pd.read_csv(REPO_ROOT / "outputs" / "tables" / "turnover.csv", parse_dates=["date"])
+    cost_sensitivity = pd.read_csv(REPO_ROOT / "outputs" / "tables" / "transaction_cost_sensitivity.csv")
     readme_path = REPO_ROOT / "README.md"
-    updated = update_readme(readme_path, summary, panel, nav, turnover, config)
+    updated = update_readme(readme_path, summary, panel, nav, turnover, cost_sensitivity, config)
     readme_path.write_text(updated, encoding="utf-8")
     print("README.md updated successfully.")

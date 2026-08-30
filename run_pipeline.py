@@ -10,7 +10,13 @@ import pandas as pd
 from src.backtest import run_all_backtests
 from src.data_loader import download_panel
 from src.factors import add_factors
-from src.performance import annual_return_by_year, monthly_return, summarize_performance, summarize_period_performance
+from src.performance import (
+    annual_return_by_year,
+    monthly_return,
+    summarize_performance,
+    summarize_period_performance,
+    transaction_cost_sensitivity,
+)
 from src.plotting import make_all_plots
 from src.strategy_metadata import strategy_label
 from src.utils import ensure_directories, load_config, setup_logging
@@ -21,6 +27,7 @@ def _write_report(
     summary: pd.DataFrame,
     nav: pd.DataFrame,
     turnover: pd.DataFrame,
+    cost_sensitivity: pd.DataFrame,
     failures_path: Path | None = None,
 ) -> None:
     """Write a compact Markdown backtest report."""
@@ -66,6 +73,17 @@ def _write_report(
                 }
             )
     validation = pd.DataFrame(validation_rows)
+    cost_display = pd.DataFrame(
+        {
+            "Cost per Traded Notional": cost_sensitivity["transaction_cost_bps"].map(lambda value: f"{value:g} bps"),
+            "Case": cost_sensitivity["is_base_case"].map({True: "Base", False: "Scenario"}),
+            "Annual Return": cost_sensitivity["annual_return"].map(lambda value: f"{value:.2%}"),
+            "Annual Vol": cost_sensitivity["annual_volatility"].map(lambda value: f"{value:.2%}"),
+            "Sharpe": cost_sensitivity["sharpe"].map(lambda value: f"{value:.3f}"),
+            "Max Drawdown": cost_sensitivity["max_drawdown"].map(lambda value: f"{value:.2%}"),
+            "Final NAV": cost_sensitivity["final_nav"].map(lambda value: f"{value:.3f}"),
+        }
+    )
     optimizer_config = config["strategy"].get("convex_optimizer", {})
     lines = [
         "# Backtest Report",
@@ -87,13 +105,23 @@ def _write_report(
         "",
         "These are historical backtests, not a guarantee that Sharpe will remain above 1 in every market regime.",
         "",
+        "## Transaction-Cost Sensitivity",
+        "",
+        cost_display.to_markdown(index=False),
+        "",
+        "Each rate is charged per unit of gross L1 traded notional. A complete switch from one fully invested "
+        "portfolio to another has L1 turnover of 2.0 and therefore charges both sell and buy legs.",
+        "",
+        "The scenarios hold signals and target weights fixed under the current backtest convention; they reprice "
+        "scheduled target changes rather than re-optimizing the portfolio.",
+        "",
         "## Convex Optimizer Defaults",
         "",
         f"- Maximum ETF weight: {float(optimizer_config.get('max_weight', config['strategy']['max_weight'])):.0%}",
         f"- Covariance window / shrinkage: {int(optimizer_config.get('covariance_window', 120))} days / {float(optimizer_config.get('covariance_shrinkage', 0.1)):.0%}",
         f"- Risk aversion: {float(optimizer_config.get('risk_aversion', 4.0)):g}",
         f"- L1 turnover regularization: {float(optimizer_config.get('turnover_penalty_bps', 0.0)):g} bp-equivalent (a regularizer, not realized trading cost)",
-        f"- Realized transaction-cost assumption: {float(config['strategy']['transaction_cost_bps']):g} bps one-way",
+        f"- Base execution-cost assumption: {float(config['strategy']['transaction_cost_bps']):g} bps per traded notional",
         "",
         "## Data Diagnostics",
         "",
@@ -113,6 +141,7 @@ def _write_report(
             "- `outputs/figures/monthly_return_heatmap.png`",
             "- `outputs/figures/holding_count.png`",
             "- `outputs/figures/turnover.png`",
+            "- `outputs/figures/transaction_cost_sensitivity.png`",
             "- `outputs/figures/factor_ic.png` when enough cross-sectional observations exist",
         ]
     )
@@ -145,23 +174,45 @@ def main() -> None:
     turnover.to_csv(turnover_path, index=False, encoding="utf-8-sig")
     logger.info("Saved backtest tables.")
 
+    risk_free_rate = float(config.get("performance", {}).get("risk_free_rate", 0.0))
     summary = summarize_performance(
         nav,
         turnover,
-        risk_free_rate=float(config.get("performance", {}).get("risk_free_rate", 0.0)),
+        risk_free_rate=risk_free_rate,
     )
     monthly = monthly_return(nav)
     yearly = annual_return_by_year(nav)
+    primary = str(config["strategy"].get("primary_strategy", "momentum_crowding_convex"))
+    cost_sensitivity = transaction_cost_sensitivity(
+        nav,
+        turnover,
+        strategy=primary,
+        base_cost_bps=float(config["strategy"]["transaction_cost_bps"]),
+        scenarios_bps=config["strategy"].get("transaction_cost_sensitivity_bps", [0, 1, 2, 3, 5, 10]),
+        risk_free_rate=risk_free_rate,
+    )
     summary.to_csv(Path(config["outputs"]["tables_dir"]) / "performance_summary.csv", index=False, encoding="utf-8-sig")
     monthly.to_csv(Path(config["outputs"]["tables_dir"]) / "monthly_returns.csv", index=False, encoding="utf-8-sig")
     yearly.to_csv(Path(config["outputs"]["tables_dir"]) / "yearly_returns.csv", index=False, encoding="utf-8-sig")
+    cost_sensitivity.to_csv(
+        Path(config["outputs"]["tables_dir"]) / "transaction_cost_sensitivity.csv",
+        index=False,
+        encoding="utf-8-sig",
+    )
     logger.info("Saved performance tables.")
 
-    ic = make_all_plots(nav, weights, turnover, factors, monthly, yearly, config)
+    ic = make_all_plots(nav, weights, turnover, factors, monthly, yearly, config, cost_sensitivity)
     if not ic.empty:
         ic.to_csv(Path(config["outputs"]["tables_dir"]) / "factor_ic.csv", index=False, encoding="utf-8-sig")
     failures_path = Path(config["outputs"]["reports_dir"]) / "data_failures.csv"
-    _write_report(config, summary, nav, turnover, failures_path if failures_path.exists() else None)
+    _write_report(
+        config,
+        summary,
+        nav,
+        turnover,
+        cost_sensitivity,
+        failures_path if failures_path.exists() else None,
+    )
     logger.info("Pipeline finished successfully.")
 
 
