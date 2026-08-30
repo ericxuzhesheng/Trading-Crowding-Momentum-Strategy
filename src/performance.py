@@ -33,8 +33,15 @@ def annual_return_by_year(nav_df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(out)
 
 
-def summarize_performance(nav_df: pd.DataFrame, turnover_df: pd.DataFrame) -> pd.DataFrame:
-    """Create a strategy-level performance summary table."""
+def summarize_performance(
+    nav_df: pd.DataFrame,
+    turnover_df: pd.DataFrame,
+    risk_free_rate: float = 0.0,
+) -> pd.DataFrame:
+    """Create performance metrics using arithmetic daily excess-return Sharpe."""
+    if risk_free_rate <= -1.0:
+        raise ValueError("risk_free_rate must be greater than -100%.")
+    daily_risk_free_rate = (1.0 + float(risk_free_rate)) ** (1.0 / 252.0) - 1.0
     rows = []
     for strategy, group in nav_df.groupby("strategy"):
         group = group.sort_values("date")
@@ -43,7 +50,8 @@ def summarize_performance(nav_df: pd.DataFrame, turnover_df: pd.DataFrame) -> pd
         years = max((group["date"].max() - group["date"].min()).days / 365.25, 1 / 252)
         ann_return = nav.iloc[-1] ** (1 / years) - 1
         ann_vol = returns.std(ddof=0) * np.sqrt(252)
-        sharpe = ann_return / ann_vol if ann_vol > 0 else np.nan
+        daily_vol = returns.std(ddof=0)
+        sharpe = (returns.mean() - daily_risk_free_rate) / daily_vol * np.sqrt(252) if daily_vol > 0 else np.nan
         mdd = max_drawdown(nav)
         strategy_turnover = turnover_df[turnover_df["strategy"] == strategy] if not turnover_df.empty and "strategy" in turnover_df else pd.DataFrame()
         rows.append(
@@ -52,6 +60,7 @@ def summarize_performance(nav_df: pd.DataFrame, turnover_df: pd.DataFrame) -> pd
                 "annual_return": ann_return,
                 "annual_volatility": ann_vol,
                 "sharpe": sharpe,
+                "return_over_volatility": ann_return / ann_vol if ann_vol > 0 else np.nan,
                 "max_drawdown": mdd,
                 "calmar": ann_return / abs(mdd) if mdd < 0 else np.nan,
                 "win_rate": float((returns > 0).mean()),
@@ -61,3 +70,29 @@ def summarize_performance(nav_df: pd.DataFrame, turnover_df: pd.DataFrame) -> pd
             }
         )
     return pd.DataFrame(rows).sort_values("strategy").reset_index(drop=True)
+
+
+def summarize_period_performance(
+    nav_df: pd.DataFrame,
+    turnover_df: pd.DataFrame,
+    *,
+    start: str | pd.Timestamp | None = None,
+    end: str | pd.Timestamp | None = None,
+    risk_free_rate: float = 0.0,
+) -> pd.DataFrame:
+    """Rebase NAV and summarize a requested date interval."""
+    period_nav = nav_df.copy()
+    period_turnover = turnover_df.copy()
+    if start is not None:
+        start_date = pd.Timestamp(start)
+        period_nav = period_nav[period_nav["date"] >= start_date]
+        period_turnover = period_turnover[period_turnover["date"] >= start_date]
+    if end is not None:
+        end_date = pd.Timestamp(end)
+        period_nav = period_nav[period_nav["date"] <= end_date]
+        period_turnover = period_turnover[period_turnover["date"] <= end_date]
+    if period_nav.empty:
+        return pd.DataFrame()
+    period_nav = period_nav.copy()
+    period_nav["nav"] = period_nav.groupby("strategy")["return"].transform(lambda values: (1.0 + values).cumprod())
+    return summarize_performance(period_nav, period_turnover, risk_free_rate=risk_free_rate)

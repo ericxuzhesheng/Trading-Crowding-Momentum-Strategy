@@ -6,6 +6,8 @@ data:
   start_date: "20180101"
   end_date: null
   min_observations: 160
+  price_adjustment: qfq
+  max_abs_daily_return: 0.30
   raw_dir: data/raw
   processed_path: data/processed/panel_daily.parquet
   tushare_token_env: TUSHARE_TOKEN
@@ -45,6 +47,7 @@ data:
     - {symbol: "162411.SZ", ak_symbol: "162411", asset: "FD", name: "Crude Oil ETF"}
 
 strategy:
+  primary_strategy: momentum_crowding_convex
   rebalance: W-FRI
   top_quantile: 0.3
   max_weight: 0.10
@@ -53,6 +56,26 @@ strategy:
   benchmark_ma_window: 200
   risk_on_exposure: 1.0
   risk_off_exposure: 0.3
+  convex_optimizer:
+    max_weight: 0.15
+    covariance_window: 120
+    min_covariance_observations: 40
+    covariance_shrinkage: 0.10
+    covariance_ridge: 0.000001
+    annualization_factor: 252
+    signal_scale: 0.10
+    risk_aversion: 4.0
+    crowding_aversion: 0.0
+    turnover_penalty_bps: 750
+    max_turnover: null
+    allow_cash: false
+    max_ex_ante_volatility: null
+    solver_tolerance: 0.000000001
+    max_iterations: 500
+
+performance:
+  risk_free_rate: 0.0
+  validation_split_date: "2023-01-01"
 
 factors:
   ret_short_window: 5

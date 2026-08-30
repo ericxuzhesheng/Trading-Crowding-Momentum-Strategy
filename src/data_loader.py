@@ -54,6 +54,35 @@ def _normalize_tushare(df: pd.DataFrame, symbol: str, name: str) -> pd.DataFrame
     return out[["date", "symbol", "name", "open", "high", "low", "close", "volume", "amount", "turnover"]]
 
 
+def _adjust_tushare_fund_prices(
+    daily: pd.DataFrame,
+    adjustment_factors: pd.DataFrame,
+    adjustment: str,
+) -> pd.DataFrame:
+    """Apply Tushare fund adjustment factors to OHLC prices."""
+    if adjustment not in {"qfq", "hfq"}:
+        raise ValueError("Fund price adjustment must be 'qfq' or 'hfq'.")
+    required = {"trade_date", "adj_factor"}
+    if daily.empty or adjustment_factors.empty or not required.issubset(adjustment_factors.columns):
+        raise DataDownloadError("Tushare fund adjustment factors are empty or incomplete.")
+
+    out = daily.merge(
+        adjustment_factors[["trade_date", "adj_factor"]],
+        on="trade_date",
+        how="left",
+        validate="one_to_one",
+    )
+    out["adj_factor"] = pd.to_numeric(out["adj_factor"], errors="coerce")
+    if out["adj_factor"].isna().any():
+        raise DataDownloadError("Tushare fund adjustment factors do not cover every daily price row.")
+    latest = out.sort_values("trade_date")["adj_factor"].iloc[-1]
+    scale = out["adj_factor"] if adjustment == "hfq" else out["adj_factor"] / latest
+    for column in ["pre_close", "open", "high", "low", "close"]:
+        if column in out:
+            out[column] = pd.to_numeric(out[column], errors="coerce") * scale
+    return out.drop(columns="adj_factor")
+
+
 def _normalize_akshare(df: pd.DataFrame, symbol: str, name: str) -> pd.DataFrame:
     """Normalize AKShare index output with tolerant Chinese/English field mapping."""
     aliases = {
@@ -100,15 +129,33 @@ def _fetch_tushare_one(item: dict[str, str], config: dict[str, Any], logger: log
     asset = item.get("asset", config["data"].get("default_asset", "I"))
     start_date = normalize_date_string(config["data"].get("start_date"))
     end_date = normalize_date_string(config["data"].get("end_date"))
+    adjustment = str(config["data"].get("price_adjustment", "") or "")
 
     errors = []
-    try:
-        df = ts.pro_bar(ts_code=symbol, api=pro, asset=asset, freq="D", start_date=start_date, end_date=end_date)
-        if df is not None and not df.empty:
-            return _normalize_tushare(df, symbol, item["name"])
-        errors.append("pro_bar returned empty data")
-    except Exception as exc:
-        errors.append(f"pro_bar failed: {exc}")
+    if asset == "FD" and adjustment:
+        try:
+            daily = pro.fund_daily(ts_code=symbol, start_date=start_date, end_date=end_date)
+            factors = pro.fund_adj(ts_code=symbol, start_date=start_date, end_date=end_date)
+            adjusted = _adjust_tushare_fund_prices(daily, factors, adjustment)
+            return _normalize_tushare(adjusted, symbol, item["name"])
+        except Exception as exc:
+            errors.append(f"adjusted fund_daily failed: {exc}")
+    else:
+        try:
+            df = ts.pro_bar(
+                ts_code=symbol,
+                api=pro,
+                asset=asset,
+                freq="D",
+                start_date=start_date,
+                end_date=end_date,
+                adj=adjustment or None,
+            )
+            if df is not None and not df.empty:
+                return _normalize_tushare(df, symbol, item["name"])
+            errors.append("pro_bar returned empty data")
+        except Exception as exc:
+            errors.append(f"pro_bar failed: {exc}")
 
     if asset == "I":
         try:
@@ -118,7 +165,7 @@ def _fetch_tushare_one(item: dict[str, str], config: dict[str, Any], logger: log
             errors.append("index_daily returned empty data")
         except Exception as exc:
             errors.append(f"index_daily failed: {exc}")
-    elif asset == "FD":
+    elif asset == "FD" and not adjustment:
         try:
             df = pro.fund_daily(ts_code=symbol, start_date=start_date, end_date=end_date)
             if df is not None and not df.empty:
@@ -134,6 +181,7 @@ def _fetch_akshare_one(item: dict[str, str], config: dict[str, Any], logger: log
     """Fetch one index or ETF from AKShare historical daily endpoints."""
     ak = _optional_import("akshare")
     asset = item.get("asset", config["data"].get("default_asset", "I"))
+    adjustment = str(config["data"].get("price_adjustment", "") or "")
     ak_symbol = item.get("ak_symbol") or item["symbol"].lower().replace(".sh", "").replace(".sz", "")
     if asset == "FD" and hasattr(ak, "fund_etf_hist_em"):
         code = item["symbol"].split(".")[0]
@@ -143,7 +191,7 @@ def _fetch_akshare_one(item: dict[str, str], config: dict[str, Any], logger: log
                 period="daily",
                 start_date=normalize_date_string(config["data"].get("start_date")) or "19900101",
                 end_date=normalize_date_string(config["data"].get("end_date")) or "20500101",
-                adjust="",
+                adjust=adjustment,
             )
             if df is not None and not df.empty:
                 return _normalize_akshare(df, item["symbol"], item["name"])
@@ -181,7 +229,7 @@ def _fetch_akshare_one(item: dict[str, str], config: dict[str, Any], logger: log
 
 
 def download_panel(config: dict[str, Any], logger: logging.Logger) -> pd.DataFrame:
-    """Download, clean, save, and return the long-format daily index panel."""
+    """Download, adjust, validate, and save the long-format daily ETF panel."""
     panels = []
     failures = []
     raw_dir = config["data"]["raw_dir"]
@@ -215,7 +263,12 @@ def download_panel(config: dict[str, Any], logger: logging.Logger) -> pd.DataFra
     if not panels:
         raise DataDownloadError("All data providers failed. See outputs/reports/data_failures.csv and pipeline.log.")
 
-    panel = standardize_panel(pd.concat(panels, ignore_index=True), config["data"]["min_observations"], logger)
+    panel = standardize_panel(
+        pd.concat(panels, ignore_index=True),
+        config["data"]["min_observations"],
+        logger,
+        max_abs_daily_return=config["data"].get("max_abs_daily_return"),
+    )
     output_path = Path(config["data"]["processed_path"])
     output_path.parent.mkdir(parents=True, exist_ok=True)
     panel.to_parquet(output_path, index=False)

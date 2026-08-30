@@ -1,4 +1,4 @@
-"""Data cleaning routines for daily index panels."""
+"""Data cleaning routines for daily ETF panels."""
 
 from __future__ import annotations
 
@@ -11,7 +11,12 @@ import pandas as pd
 REQUIRED_COLUMNS = ["date", "symbol", "name", "open", "high", "low", "close", "volume", "amount", "turnover"]
 
 
-def standardize_panel(df: pd.DataFrame, min_observations: int, logger: logging.Logger | None = None) -> pd.DataFrame:
+def standardize_panel(
+    df: pd.DataFrame,
+    min_observations: int,
+    logger: logging.Logger | None = None,
+    max_abs_daily_return: float | None = None,
+) -> pd.DataFrame:
     """Validate, clean, and sort a long-format daily panel."""
     if df.empty:
         raise ValueError("No daily data was downloaded from any source.")
@@ -48,4 +53,17 @@ def standardize_panel(df: pd.DataFrame, min_observations: int, logger: logging.L
     cleaned = pd.concat(kept, ignore_index=True)
     cleaned["turnover"] = cleaned.groupby("symbol")["turnover"].transform(lambda s: s.fillna(s.median()))
     cleaned["turnover"] = cleaned["turnover"].fillna(0.0)
+    if max_abs_daily_return is not None:
+        threshold = float(max_abs_daily_return)
+        if threshold <= 0.0:
+            raise ValueError("max_abs_daily_return must be positive when supplied.")
+        daily_return = cleaned.groupby("symbol")["close"].pct_change(fill_method=None)
+        extreme = cleaned.loc[daily_return.abs() > threshold, ["date", "symbol", "close"]].copy()
+        if not extreme.empty:
+            extreme["daily_return"] = daily_return.loc[extreme.index]
+            sample = extreme.head(10).to_dict("records")
+            raise ValueError(
+                "Adjusted-price validation failed: "
+                f"{len(extreme)} daily returns exceed {threshold:.1%}. Sample: {sample}"
+            )
     return cleaned[REQUIRED_COLUMNS].sort_values(["date", "symbol"]).reset_index(drop=True)

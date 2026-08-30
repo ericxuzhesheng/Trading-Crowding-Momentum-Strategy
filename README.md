@@ -1,4 +1,4 @@
-<h1 align="left">交易拥挤度惩罚的动量轮动策略 | Trading-Crowding Penalized Momentum Rotation</h1>
+<h1 align="left">凸优化的交易拥挤度动量策略 | Convex Trading-Crowding Momentum Strategy</h1>
 
 ---
 
@@ -10,14 +10,14 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Universe-30%20Multi--Asset%20ETFs-f3c63f?style=for-the-badge&labelColor=4a4f59" alt="Universe">
   <img src="https://img.shields.io/badge/Period-2018%E2%80%932026%20%C2%B7%2054821%20obs-4caf50?style=for-the-badge&labelColor=4a4f59" alt="Period">
-  <img src="https://img.shields.io/badge/Main%20Strategy-Sharpe%200.72%20%7C%20MaxDD%20--18.77%25-9853e6?style=for-the-badge&labelColor=4a4f59" alt="Main Strategy">
-  <img src="https://img.shields.io/badge/PYTHON-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=4a4f59" alt="Python">
+  <img src="https://img.shields.io/badge/Main%20Strategy-Sharpe%201.19%20%7C%20MaxDD%20--11.54%25-9853e6?style=for-the-badge&labelColor=4a4f59" alt="Main Strategy">
+  <img src="https://img.shields.io/badge/PYTHON-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=4a4f59" alt="Python">
   <img src="https://img.shields.io/badge/LICENSE-MIT-111111?style=for-the-badge&labelColor=4a4f59" alt="MIT">
 </p>
 
 <p align="center">
   <strong>English Description:</strong>
-  A reproducible multi-asset ETF rotation research project that combines short- and medium-term momentum with trading-crowding and volatility penalties, using Tushare/AKShare data, weekly rebalancing, transaction-cost-aware backtests, and bilingual reporting.
+  A reproducible multi-asset ETF strategy that converts crowding-adjusted momentum into long-only weights with a convex risk-and-turnover optimizer, adjusted-price validation, weekly rebalancing, and temporal holdout reporting.
 </p>
 
 ---
@@ -26,32 +26,37 @@
 
 ### 项目简介
 
-本项目从零实现一个 A 股 ETF 层面的“交易拥挤度 + 动量轮动”策略研究框架。项目自动读取 ETF/指数日频行情，构建动量、拥挤度和波动率风险指标，进行每周调仓回测，并输出绩效表格、图表和诊断报告。
+本项目实现一个多资产 ETF 层面的“交易拥挤度 + 动量 + 凸组合优化”研究框架。项目读取前复权 ETF 日频行情，构建动量、拥挤度和波动率信号，每周求解长仓凸优化问题，并输出绩效、权重、求解诊断、图表和时间切分验证。
 
-核心思想不是把拥挤度直接当作买入 alpha，而是把它作为动量策略的风险惩罚项：优先选择短期动量较强、但交易拥挤度和波动率不过高的指数。
+核心思想不是把拥挤度直接当作买入 alpha，而是先形成“动量减拥挤度”的预期收益排序，再由组合层同时权衡完整协方差风险、持仓上限和 L1 换手正则。原 top-quantile 等权策略全部保留为对照。
 
 ### 结果怎么样
 
-本次真实数据运行覆盖 2018-01-02 至 2026-08-28，共 30 只 ETF，合计 54821 条日频记录，数据由 Tushare 成功下载。
+本次前复权数据运行覆盖 2018-01-02 至 2026-08-28，共 30 只 ETF，合计 54821 条日频记录。
 
-本轮优化先修复了一个关键回测问题：旧版本在调仓时把 0 权重当作缺失值向前填充，导致已卖出的标的继续保留旧仓位，风险暴露被高估。修复后，卖出标的权重会正确归零；随后改用用户 Relaxed Risk Parity 项目的 30 ETF 多资产池，使策略不再局限于单一 A 股行业轮动；最终默认参数为 top30%、MA200 趋势过滤、risk-off 30%，最终得分为“短动量 + 中期动量确认 - 拥挤度惩罚 - 波动率惩罚”。
+推荐主策略为 `momentum_crowding_convex`：对所有信号有效且历史充足的 ETF 连续求权重，单 ETF 上限 15%，使用 120 日收缩协方差和较强的 L1 换手正则。价格由 Tushare `fund_daily + fund_adj` 前复权，AKShare `adjust="qfq"` 作为回退，并对超过 30% 的未解释单日跳变直接报错，防止基金拆分被误算为投资收益。
+
+文中 Sharpe 采用标准日频超额收益口径：`sqrt(252) * mean(daily_return - daily_rf) / std(daily_return)`；默认年化无风险利率为 0%，同时在结果表保留 CAGR/波动率比值以便核对旧口径。
 
 | 策略 | 年化收益 | 年化波动 | Sharpe | 最大回撤 | 最终净值 |
 |:--|--:|--:|--:|--:|--:|
-| 全 ETF 等权 | 11.24% | 16.50% | 0.68 | -18.83% | 2.514 |
-| 纯拥挤度 top30 对照组 | 22.22% | 34.28% | 0.65 | -17.38% | 5.673 |
-| 沪深300 ETF 买入持有 | 1.44% | 19.68% | 0.07 | -45.10% | 1.131 |
-| 动量 - 拥挤度惩罚 | 12.13% | 16.39% | 0.74 | -19.42% | 2.693 |
-| 动量 - 拥挤度惩罚 + 趋势过滤 | 9.15% | 12.75% | 0.72 | -18.77% | 2.133 |
-| 纯 5 日动量 top30 | 8.02% | 16.90% | 0.47 | -20.81% | 1.949 |
+| 全 ETF 等权 | 8.60% | 12.57% | 0.74 | -15.95% | 2.042 |
+| 纯拥挤度 top30 对照组 | 13.64% | 14.43% | 0.99 | -15.82% | 3.022 |
+| 沪深300 ETF 买入持有 | 3.31% | 19.63% | 0.27 | -42.16% | 1.325 |
+| 凸优化动量 - 拥挤度 | 14.13% | 12.11% | 1.19 | -11.54% | 3.139 |
+| 凸优化动量 - 拥挤度 + 趋势过滤 | 9.59% | 10.81% | 0.93 | -13.12% | 2.209 |
+| 动量 - 拥挤度惩罚 | 10.52% | 14.39% | 0.79 | -16.08% | 2.376 |
+| 动量 - 拥挤度惩罚 + 趋势过滤 | 7.95% | 12.78% | 0.69 | -19.23% | 1.938 |
+| 纯 5 日动量 top30 | 6.19% | 15.00% | 0.49 | -18.36% | 1.681 |
 
 解读要点：
 
-- RRP ETF 池带来真正改善：多资产分散让策略不再被 A 股单一风险源支配。
-- 未加趋势过滤的惩罚动量版本年化 12.13%、Sharpe 0.74，显著高于纯 5 日动量和沪深300 ETF。
-- 加入 MA200 趋势过滤后，年化为 9.15%、Sharpe 0.72，最大回撤从未过滤版的 -19.42% 降至 -18.77%，更适合作为稳健默认配置。
-- 相比全 ETF 等权，趋势过滤主策略年化略低，但回撤更浅、Sharpe 更高。
-- 纯拥挤度仍只作为对照组，不作为推荐 alpha；拥挤度在主策略中继续作为风险惩罚项使用。
+<!-- OPTIMIZED_SUMMARY_ZH_START -->
+- 推荐主策略「凸优化动量 - 拥挤度」全样本年化 14.13%、标准 Sharpe 1.19、最大回撤 -11.54%，周均 L1 换手 0.403。
+- 相比原等权组合构建，Sharpe 从 0.79 提高到 1.19，最大回撤从 -16.08% 收窄到 -11.54%。
+- 时间切分结果：2018–2022 参数选择段 Sharpe 1.13；2023 年起时间留出段 Sharpe 1.28。分阶段表现仍有差异，不能把 Sharpe 1 视为承诺。
+- 优化器使用 15% 单 ETF 上限与 750 bp-equivalent 的 L1 换手正则；后者是控制交易稳定性的正则强度，不是实际交易费率。
+<!-- OPTIMIZED_SUMMARY_ZH_END -->
 
 ### 策略逻辑
 
@@ -67,15 +72,44 @@
 
 所有 rank 均为同一天不同指数之间的横截面 percentile rank，并且所有交易信号滞后一日，避免未来函数。
 
+### 凸优化组合构建
+
+推荐策略 `momentum_crowding_convex` 不做硬 top-k 筛选，而是在所有信号有效且历史长度足够的 ETF 上连续求权重。旧 top30% 规则只选 9 只 ETF，配合旧版 10% 上限时会强制每只都是 10%，优化器没有自由度。凸优化器因此使用独立的 15% 上限，让 alpha、风险和换手之间存在真实取舍。
+
+每个调仓日求解以下凸二次规划：
+
+```text
+minimize  -alpha' w
+          + (risk_aversion / 2) * w' Sigma w
+          + (crowding_aversion / 2) * sum(q_i * w_i^2)
+          + turnover_penalty * ||w - w_prev||_1
+
+subject to  sum(w) = target_exposure
+            0 <= w_i <= max_weight
+            ||w - w_prev||_1 <= max_turnover  (可选)
+            w' Sigma w <= volatility_limit^2 (允许现金时可选)
+```
+
+- `alpha` 是横截面标准化后的滞后综合得分，保留“动量减拥挤度”的经济含义。
+- `Sigma` 只使用信号日及以前的滚动收益估计，并经过对角收缩和特征值下限处理，保证数值上半正定。
+- `q_i` 是可选的拥挤集中度项；默认设为 0，因为综合 alpha 已经包含 `-0.65 * crowding`，避免双重惩罚。
+- 默认 750 bp-equivalent 的 L1 系数是换手正则强度，不是交易费假设；回测实际仍按单边 3 bps 扣费。
+- `allow_cash`、硬换手上限和事前波动率上限均为可选凸约束；它们能进一步降风险，但当前验证中没有提高 Sharpe，因此默认关闭。
+- 当有效资产不足时，目标暴露自动取 `min(exposure, n_valid * max_weight)`；求解失败时确定性回退到原等权选择器，并在 `turnover.csv` 留下状态。
+
+参数集中在 `strategy.convex_optimizer`。`turnover.csv` 同时输出求解状态、目标暴露、目标函数分解、事前波动率和迭代次数，便于区分 alpha、风险、拥挤度和换手成本的贡献。
+
 ### 数据来源
 
-数据层优先使用 Tushare Pro：
+数据层优先使用 Tushare Pro 的基金行情与复权因子：
 
-- `pro_bar` / `fund_daily` / `index_daily`：ETF 与指数日行情
+- `fund_daily + fund_adj`：生成连续的前复权 ETF OHLC；不再把拆分和份额合并当作收益
 - 环境变量：`TUSHARE_TOKEN`
-- 失败处理：token 缺失、权限不足或接口异常时自动 fallback 到 AKShare
+- 失败处理：token 缺失、复权因子权限不足或接口异常时，回退到 AKShare `fund_etf_hist_em(adjust="qfq")`
+- 质量门槛：默认拒绝绝对值超过 30% 的 ETF 单日收益，并输出具体日期和标的
 
-代码不会把 token 写入源码。AKShare fallback 使用指数历史行情接口，并对中英文字段名做统一映射。
+代码不会把 token 写入源码。当前跟踪数据已通过复权连续性检查；最大单日绝对收益为 20%。
+AKShare 对复权必要性和 `qfq` 参数的说明见其[官方 ETF 行情文档](https://akshare.akfamily.xyz/data/fund/fund_public.html)。
 
 ### 安装方式
 
@@ -101,7 +135,7 @@ python run_pipeline.py --config config.yaml
 - `outputs/tables/factor_values.csv`：因子与滞后信号
 - `outputs/tables/portfolio_nav.csv`：各策略净值
 - `outputs/tables/weekly_weights.csv`：每周调仓权重
-- `outputs/tables/turnover.csv`：换手率与交易成本
+- `outputs/tables/turnover.csv`：换手率、交易成本、求解状态、目标函数分解、事前波动率和约束松弛量
 - `outputs/tables/performance_summary.csv`：绩效汇总
 - `outputs/tables/yearly_returns.csv`：年度收益
 - `outputs/tables/monthly_returns.csv`：月度收益
@@ -131,6 +165,9 @@ trading-crowding-momentum-strategy/
 ├── config.yaml
 ├── run_pipeline.py
 ├── src/
+│   ├── optimizer.py
+│   └── strategy_metadata.py
+├── scripts/update_readme.py
 ├── data/
 ├── outputs/
 └── tests/
@@ -140,16 +177,17 @@ trading-crowding-momentum-strategy/
 
 - ETF 换手率仍然不是完美的拥挤度代理，因此拥挤度会同时使用成交额、成交量异常作为替代。
 - 当前资产池有 30 只 ETF，比最初指数版本更宽，但对横截面研究来说仍然不算大。
-- 交易成本用 3bp 单边成本近似，未建模冲击成本和真实 ETF 可交易性。
-- 最大回撤仍然很深，说明该策略需要进一步风控和样本外验证。
-- 趋势过滤规则较简单，在当前样本中没有改善结果。
+- 交易成本用 3bp 单边成本近似；10bp 压力测试仍可接受，但 20bp 时优势明显收窄，尚未建模冲击成本和容量。
+- 2018–2022 参数选择段和 2023+ 时间留出段的聚合 Sharpe 均超过 1，但较短市场阶段仍可能显著低于 1，统计证据并不等于实盘保证。
+- 750 bp-equivalent 是基于历史稳定性选择的换手正则，不应解释为可观测的真实交易成本。
+- 30 只 ETF 的横截面仍较小，且拥挤度代理主要来自成交数据；未来应加入份额、资金流和融资数据。
 
 ### 后续优化方向
 
 - 扩展行业、主题和 ETF 可交易池。
 - 引入 ETF 份额、资金流、融资融券、北向资金等更直接的拥挤度代理变量。
-- 对调仓频率、拥挤度窗口、权重上限和趋势过滤规则做样本外验证。
-- 加入容量约束、冲击成本模型和真实 ETF 映射。
+- 做滚动 walk-forward、参数漂移监控和分市场状态报告。
+- 加入容量约束、冲击成本、ETF 份额变化和真实成交映射。
 
 ---
 
@@ -157,32 +195,37 @@ trading-crowding-momentum-strategy/
 
 ### Overview
 
-This project implements a from-scratch A-share ETF research framework for a trading-crowding penalized momentum rotation strategy. It downloads daily ETF/index data, builds momentum, crowding, and volatility-risk signals, runs weekly rebalancing backtests, and exports performance tables, figures, and diagnostics.
+This project implements a multi-asset ETF research framework for crowding-adjusted momentum with convex portfolio construction. It uses forward-adjusted prices, solves long-only risk-and-turnover problems weekly, and exports performance, weights, solver diagnostics, figures, and temporal validation.
 
-The key idea is not to use crowding directly as alpha. Crowding is used as a risk penalty inside a momentum strategy, favoring indices with positive short-term momentum but less excessive trading activity and volatility.
+Crowding is not treated as standalone alpha. It reduces the momentum forecast, after which the optimizer balances that forecast against the full covariance matrix, position limits, and L1 turnover regularization. Original top-quantile equal-weight rules remain as baselines.
 
 ### Results
 
-The latest real-data run covers 2018-01-02 to 2026-08-28, with 30 ETFs, 54821 daily observations downloaded from Tushare.
+The latest forward-adjusted run covers 2018-01-02 to 2026-08-28, with 30 ETFs and 54821 daily observations.
 
-This optimization first fixed a critical backtest issue: the old implementation treated zero rebalance weights as missing values and forward-filled them, so sold positions could keep stale weights. After the fix, sold positions correctly reset to zero. The universe was then replaced with the user's Relaxed Risk Parity 30-ETF multi-asset pool, so the strategy is no longer limited to single-market A-share sector rotation. The default strategy uses top30% selection, an MA200 trend filter, 30% risk-off exposure, and a final score based on short momentum plus medium-term confirmation minus crowding and volatility penalties.
+The recommended `momentum_crowding_convex` strategy optimizes over every ETF with a valid signal and sufficient history, using a 15% ETF cap, a 120-day shrunk covariance matrix, and strong L1 turnover regularization. Tushare `fund_daily + fund_adj` produces forward-adjusted prices, AKShare `adjust="qfq"` is the fallback, and an unexplained daily move above 30% fails the data pipeline instead of becoming a false strategy return.
+
+Sharpe uses the standard daily excess-return definition: `sqrt(252) * mean(daily_return - daily_rf) / std(daily_return)`. The default annual risk-free rate is 0%; CAGR divided by volatility remains a separate output column for continuity with earlier reports.
 
 | Strategy | Annual Return | Annual Vol | Sharpe | Max Drawdown | Final NAV |
 |:--|--:|--:|--:|--:|--:|
-| All-ETF EW | 11.24% | 16.50% | 0.68 | -18.83% | 2.514 |
-| Pure Crowding | 22.22% | 34.28% | 0.65 | -17.38% | 5.673 |
-| CSI 300 B&H | 1.44% | 19.68% | 0.07 | -45.10% | 1.131 |
-| Mom-Crowding | 12.13% | 16.39% | 0.74 | -19.42% | 2.693 |
-| Mom-Crowding+Trend | 9.15% | 12.75% | 0.72 | -18.77% | 2.133 |
-| Pure 5D Mom | 8.02% | 16.90% | 0.47 | -20.81% | 1.949 |
+| All-ETF Equal Weight | 8.60% | 12.57% | 0.74 | -15.95% | 2.042 |
+| Pure Crowding | 13.64% | 14.43% | 0.99 | -15.82% | 3.022 |
+| CSI 300 Buy & Hold | 3.31% | 19.63% | 0.27 | -42.16% | 1.325 |
+| Convex Mom-Crowding | 14.13% | 12.11% | 1.19 | -11.54% | 3.139 |
+| Convex Mom-Crowding + Trend | 9.59% | 10.81% | 0.93 | -13.12% | 2.209 |
+| Mom-Crowding Equal Weight | 10.52% | 14.39% | 0.79 | -16.08% | 2.376 |
+| Mom-Crowding Equal Weight + Trend | 7.95% | 12.78% | 0.69 | -19.23% | 1.938 |
+| Pure 5D Momentum | 6.19% | 15.00% | 0.49 | -18.36% | 1.681 |
 
 Takeaways:
 
-- The RRP ETF universe is the real improvement: multi-asset diversification prevents the strategy from being dominated by one A-share risk source.
-- The unfiltered penalized momentum strategy earns 12.13% annualized with a 0.74 Sharpe, outperforming pure 5-day momentum and CSI 300 ETF buy-and-hold.
-- The MA200 trend filter lowers annual return to 9.15%, but reduces max drawdown from -19.42% to -18.77%, making it the more conservative default.
-- Compared with all-ETF equal weight, the trend-filtered main strategy has slightly lower annual return but shallower drawdown and higher Sharpe.
-- Pure crowding remains an ablation only; crowding is used as a risk penalty in the main strategy, not as standalone alpha.
+<!-- OPTIMIZED_SUMMARY_EN_START -->
+- The recommended Convex Mom-Crowding strategy delivers 14.13% annualized return, a standard Sharpe of 1.19, -11.54% max drawdown, and 0.403 average weekly L1 turnover over the full sample.
+- Versus the original equal-weight portfolio construction, Sharpe rises from 0.79 to 1.19, while max drawdown improves from -16.08% to -11.54%.
+- Temporal validation: Sharpe is 1.13 for the 2018–2022 parameter-selection period and 1.28 for the 2023+ holdout. Regime results vary, so Sharpe 1 is not a promise.
+- The optimizer uses a 15% ETF cap and 750 bp-equivalent L1 turnover regularizer. The latter is a stability penalty, not the realized transaction-cost assumption.
+<!-- OPTIMIZED_SUMMARY_EN_END -->
 
 ### Strategy Logic
 
@@ -198,15 +241,42 @@ Signals:
 
 All ranks are same-day cross-sectional percentile ranks. Tradable signals are shifted by one trading day to avoid look-ahead bias.
 
+### Convex Portfolio Construction
+
+The recommended `momentum_crowding_convex` strategy solves for continuous weights over all ETFs with valid signals and sufficient trailing history. The legacy top-30% screen leaves nine names under its 10% cap, forcing equal 10% weights and making optimization degenerate. The convex strategy therefore uses a separate 15% cap.
+
+At each rebalance, the convex variants solve:
+
+```text
+minimize  -alpha' w
+          + (risk_aversion / 2) * w' Sigma w
+          + (crowding_aversion / 2) * sum(q_i * w_i^2)
+          + turnover_penalty * ||w - w_prev||_1
+
+subject to  sum(w) = target_exposure
+            0 <= w_i <= max_weight
+            ||w - w_prev||_1 <= max_turnover  (optional)
+            w' Sigma w <= volatility_limit^2  (optional with cash)
+```
+
+`alpha` is the standardized lagged crowding-adjusted momentum score. `Sigma` uses only trailing returns available
+on the signal date and is made numerically positive semidefinite through diagonal shrinkage and an eigenvalue floor.
+The `q_i` concentration term is optional and defaults to zero because crowding already enters alpha. The 750
+bp-equivalent L1 coefficient is a stability regularizer, not the realized fee assumption; the backtest charges 3 bps
+one-way. Cash, hard turnover, and ex-ante volatility limits remain optional convex controls. Capacity is handled with
+`min(exposure, n_valid * max_weight)`, and deterministic fallbacks plus objective diagnostics are recorded in `turnover.csv`.
+
 ### Data Sources
 
-The data layer prioritizes Tushare Pro:
+The data layer prioritizes adjusted Tushare fund data:
 
-- `pro_bar` / `fund_daily` / `index_daily`: daily ETF and index prices
+- `fund_daily + fund_adj`: continuous forward-adjusted ETF OHLC
 - Environment variable: `TUSHARE_TOKEN`
-- Fallback: AKShare when the token is missing, permission is insufficient, or the interface fails
+- Fallback: AKShare `fund_etf_hist_em(adjust="qfq")`
+- Quality gate: reject unexplained absolute daily ETF returns above 30%
 
-The token is never hard-coded. AKShare fallback normalizes both Chinese and English field names.
+The token is never hard-coded. The tracked panel passes the adjusted-price continuity gate; its largest absolute daily return is 20%.
+See the [official AKShare ETF history documentation](https://akshare.akfamily.xyz/data/fund/fund_public.html) for why adjusted prices are required and how `qfq` is requested.
 
 ### Installation
 
@@ -232,7 +302,7 @@ python run_pipeline.py --config config.yaml
 - `outputs/tables/factor_values.csv`: factor values and lagged signals
 - `outputs/tables/portfolio_nav.csv`: strategy NAV series
 - `outputs/tables/weekly_weights.csv`: weekly rebalance weights
-- `outputs/tables/turnover.csv`: turnover and transaction costs
+- `outputs/tables/turnover.csv`: turnover, costs, solver status, objective components, ex-ante volatility, and constraint slack
 - `outputs/tables/performance_summary.csv`: performance summary
 - `outputs/tables/yearly_returns.csv`: annual returns
 - `outputs/tables/monthly_returns.csv`: monthly returns
@@ -256,9 +326,10 @@ More figures:
 
 - ETF turnover is still an imperfect crowding proxy, so traded value and volume abnormality are used alongside turnover.
 - The current universe has 30 ETFs, which is broader than the first index-only version but still limited for cross-sectional research.
-- Transaction cost is approximated with 3 bps one-way cost; market impact and ETF tradability are not fully modeled.
-- Drawdowns remain deep, so more risk controls and out-of-sample validation are needed.
-- The current trend filter is simple and did not improve this sample.
+- Transaction cost is approximated at 3 bps one-way. A 10-bp stress remains acceptable, while the edge narrows materially at 20 bps; impact and capacity are not fully modeled.
+- Aggregate Sharpe exceeds 1 in both the 2018–2022 selection period and the 2023+ temporal holdout, but shorter regimes can remain well below 1. This is backtest evidence, not a live-performance promise.
+- The 750 bp-equivalent turnover coefficient is a historical regularization choice, not an observable trading fee.
+- The 30-ETF cross-section and turnover-based crowding proxies remain limited; ETF shares, flows, financing, and richer capacity data are natural extensions.
 
 ### License
 
