@@ -1,4 +1,4 @@
-"""Tests for keeping README claims synchronized with the configured primary strategy."""
+"""Tests for keeping README research claims synchronized with generated outputs."""
 
 from pathlib import Path
 
@@ -9,7 +9,7 @@ from src.performance import summarize_performance, transaction_cost_sensitivity
 
 
 def test_readme_update_uses_configured_convex_primary(tmp_path: Path) -> None:
-    """The updater must not restore the legacy trend strategy or stale badge metrics."""
+    """The updater must refresh evidence without restoring performance marketing."""
     dates = pd.date_range("2022-12-29", periods=6, freq="B")
     returns_by_strategy = {
         "momentum_crowding_convex": [0.0, 0.01, 0.002, 0.003, -0.001, 0.004],
@@ -50,7 +50,7 @@ def test_readme_update_uses_configured_convex_primary(tmp_path: Path) -> None:
         "\n".join(
             [
                 '<img src="https://img.shields.io/badge/old" alt="Period">',
-                '<img src="https://img.shields.io/badge/old" alt="Main Strategy">',
+                '<img src="https://img.shields.io/badge/research" alt="Research Design">',
                 "本次真实数据运行覆盖 2020-01-01 至 2020-01-02，共 1 只 ETF，合计 2 条日频记录。",
                 "| 策略 | 年化收益 | 年化波动 | Sharpe | 最大回撤 | 最终净值 |",
                 "|:--|--:|--:|--:|--:|--:|",
@@ -83,9 +83,14 @@ def test_readme_update_uses_configured_convex_primary(tmp_path: Path) -> None:
         scenarios_bps=[0, 1, 2, 3, 5, 10],
     )
     updated = update_readme(readme, summary, panel, nav_df, turnover_df, sensitivity, config)
-    assert "Main%20Strategy-Sharpe" in updated
+    assert "Period-2022-2023%20%7C%206%20obs" in updated
+    assert "Main%20Strategy-Sharpe" not in updated
+    assert 'alt="Research Design"' in updated
     assert "凸优化动量 - 拥挤度" in updated
     assert "Convex Mom-Crowding" in updated
+    assert "A 2023-01-01 temporal split" in updated
+    assert "configured listed funds" in updated
+    assert "resulting exposure" in updated
     assert "| 3 bps | 基准" in updated
     assert "| 10 bps | Scenario" in updated
     assert "| old |" not in updated

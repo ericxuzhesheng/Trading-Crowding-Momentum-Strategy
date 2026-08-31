@@ -282,7 +282,7 @@ def run_buy_and_hold(factors: pd.DataFrame, benchmark_symbol: str) -> pd.DataFra
 
 
 def run_equal_weight(factors: pd.DataFrame) -> pd.DataFrame:
-    """Build an all-ETF equal-weight daily rebalanced benchmark."""
+    """Average all configured return slots daily, filling unavailable returns with zero."""
     close = _wide_prices(factors, "close")
     returns = close.pct_change(fill_method=None).fillna(0.0)
     ret = returns.mean(axis=1)
