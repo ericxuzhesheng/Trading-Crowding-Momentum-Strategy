@@ -36,7 +36,18 @@ jobs:
       - name: Run data pipeline
         env:
           TUSHARE_TOKEN: ${{ secrets.TUSHARE_TOKEN }}
-        run: python run_pipeline.py --config config.yaml
+        run: |
+          # Refresh through the latest available date, even when local research pins a snapshot.
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          path = Path("config.yaml")
+          config = yaml.safe_load(path.read_text(encoding="utf-8"))
+          config["data"]["end_date"] = None
+          path.write_text(yaml.safe_dump(config, sort_keys=False), encoding="utf-8")
+          PY
+          python run_pipeline.py --config config.yaml
 
       - name: Update README with latest metrics
         run: python scripts/update_readme.py
