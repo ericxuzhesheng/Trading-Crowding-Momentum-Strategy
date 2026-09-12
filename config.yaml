@@ -4,7 +4,7 @@ project:
 
 data:
   start_date: "20180101"
-  end_date: null
+  end_date: "20260911"
   min_observations: 160
   price_adjustment: qfq
   max_abs_daily_return: 0.30
