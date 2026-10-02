@@ -48,7 +48,21 @@
 
 评价口径也经过了拆分。Sharpe 使用日频超额收益的标准定义，CAGR 与波动率之比单独保留。时间稳定性通过配置中的单次时间切分展示，交易成本则在固定信号和目标权重下从 0 bps 压力测试到 10 bps。
 
-当前跟踪结果中，复合拥挤度调整动量得分的一日横截面 Spearman IC 接近零，没有显示稳定预测力，而且这一预测期限与周度调仓并不完全匹配。后续研究需要按周度持有期重新检验复合得分，并加入移除拥挤度惩罚的匹配消融。现有证据更能支持数据纠错、约束建模和验证过程方面的工作。
+复合得分的一日横截面 Spearman IC 接近零。2026-10-02 补充了与周度持有期对齐的 IC 和同优化器、同约束、同资产资格的无拥挤度消融，结果见下节。新结果仍不足以确认拥挤度提供稳定预测力。
+
+### 周度 IC 与匹配消融（2026-10-02）
+
+[完整结果与口径](outputs/research_validation/report.md)覆盖 2018-01-02 至 2026-09-30。信号对应下一个交易日收盘至下一次执行收盘的收益，剔除未结束的持有期及缺价路径；两组只改变拥挤度惩罚，保留相同信号资格掩码。
+
+| 全样本 | 有拥挤度惩罚 | 无拥挤度惩罚 |
+|---|---:|---:|
+| 年化收益 | 13.59% | 12.82% |
+| Sharpe | 1.155 | 1.015 |
+| 最大回撤 | -11.54% | -12.47% |
+| 周均 L1 换手 | 0.405 | 0.361 |
+| 440 个持有期的平均 IC | 0.0126 | 0.0209 |
+
+拥挤度版本的全样本组合 Sharpe 较高，但周度 IC 较低，较晚区间年化收益也低于无拥挤度版本。该消融描述当前回测设计下的差异，不构成事前样本外或因果证据。复跑：`python scripts/run_research_validation.py`，使用仓库保存的日频面板，无需联网。
 
 ### 实证结果与证据边界
 
@@ -222,7 +236,7 @@ trading-crowding-momentum-strategy/
 
 - 资产池由当前配置手工给出，尚未按历史时点重建场内基金的上市、退市和可交易状态，选择偏差与幸存者偏差仍可能存在。
 - 换手率、成交额和成交量都属于间接拥挤度输入。当前接近零的日频横截面 IC 也说明复合得分证据仍弱。
-- 当前没有在同一优化器和约束下移除拥挤度惩罚的匹配消融，因此结果无法识别拥挤度的边际贡献。
+- 已补充同优化器和约束下的匹配消融；其结论依赖当前参数和资产池，尚未通过事前冻结的独立样本验证。
 - 配置中的单次时间切分只是一项描述性诊断。仓库尚未记录冻结参数的事前流程，也没有重复 walk-forward 或多重检验校正。
 - 基准成本为每单位成交名义本金 3 bps；0/1/2/3/5/10 bps 情景只重算计划调仓成本，尚未用逐笔盘口数据建模价差、冲击和容量。
 - 当前向量化回测把目标权重视为调仓间的固定日度暴露，并按计划目标权重变化计费；这一口径与持仓份额自然漂移后的逐笔成交模拟存在差异。
@@ -262,7 +276,7 @@ Once all 30 configured instruments are available, the first top-30% rule selects
 
 Raw price paths also exposed unit-consolidation jumps that would have entered the backtest as false returns. The data layer now uses forward-adjusted prices and stops with the affected symbol and date whenever an absolute daily move exceeds 30%.
 
-The evaluation separates the standard daily excess-return Sharpe from the CAGR-to-volatility ratio. The configured split describes earlier and later behavior, while fixed-signal transaction-cost scenarios range from 0 to 10 bps. The one-day cross-sectional Spearman IC of the composite crowding-adjusted momentum score is near zero and does not show stable predictability. That horizon also differs from the weekly rebalance interval, so a holding-period-aligned IC test and a matched no-crowding ablation remain future work. The present evidence is strongest on data controls, constrained portfolio construction, and research auditability.
+The evaluation separates standard daily excess-return Sharpe from the CAGR-to-volatility ratio. The configured time split and cost scenarios remain descriptive. The [2026-10-02 supplement](outputs/research_validation/report.md) adds a holding-period-aligned IC test and a matched no-crowding ablation, using the same optimizer, constraints, and eligibility mask. With versus without the penalty, full-sample Sharpe is 1.155 versus 1.015, while mean weekly IC is 0.0126 versus 0.0209 over 440 intervals. Crowding also has lower annualized return in the later segment. These mixed results do not establish stable predictive value. Reproduce offline with `python scripts/run_research_validation.py`.
 
 ### Empirical Results and Evidence Boundary
 
@@ -410,7 +424,7 @@ Additional figures
 
 - The universe is manually specified from the current configuration. Historical listings, delistings, and point-in-time tradability are not reconstructed, so selection and survivorship effects may remain.
 - Turnover, traded amount, and fallback volume are indirect crowding inputs. The near-zero daily cross-sectional IC also leaves weak evidence for the composite score.
-- No matched experiment removes the crowding penalty while holding the optimizer and constraints fixed, so the current results do not identify crowding's marginal contribution.
+- A matched no-crowding experiment now holds the optimizer, constraints, and eligibility fixed. Its findings depend on the current parameters and universe and have not passed a pre-committed independent holdout.
 - The configured single time split is descriptive. The repository does not record a pre-committed parameter freeze, repeated walk-forward estimation, or multiple-testing adjustment.
 - The base cost is 3 bps per unit of traded notional. The 0/1/2/3/5/10 bps scenarios only reprice scheduled target changes; bid-ask spread, market impact, and capacity are not estimated from order-book data.
 - The vectorized backtest treats target weights as constant daily exposures between scheduled changes and charges changes in target weights; it is not a drift-aware share-level execution simulation.

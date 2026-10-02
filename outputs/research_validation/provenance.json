@@ -1,0 +1,266 @@
+{
+  "input": "data/processed/panel_daily.parquet",
+  "start": "2018-01-02",
+  "end": "2026-09-30",
+  "rows": 55481,
+  "configuration": {
+    "project": {
+      "name": "trading-crowding-momentum-strategy",
+      "random_seed": 42
+    },
+    "data": {
+      "start_date": "20180101",
+      "end_date": "20260911",
+      "min_observations": 160,
+      "price_adjustment": "qfq",
+      "max_abs_daily_return": 0.3,
+      "raw_dir": "data/raw",
+      "processed_path": "data/processed/panel_daily.parquet",
+      "tushare_token_env": "TUSHARE_TOKEN",
+      "prefer_tushare": true,
+      "sleep_seconds": 0.25,
+      "default_asset": "FD",
+      "indices": [
+        {
+          "symbol": "511380.SH",
+          "ak_symbol": "511380",
+          "asset": "FD",
+          "name": "Convertible Bond ETF"
+        },
+        {
+          "symbol": "511010.SH",
+          "ak_symbol": "511010",
+          "asset": "FD",
+          "name": "Government Bond ETF"
+        },
+        {
+          "symbol": "511030.SH",
+          "ak_symbol": "511030",
+          "asset": "FD",
+          "name": "Credit Bond ETF"
+        },
+        {
+          "symbol": "511880.SH",
+          "ak_symbol": "511880",
+          "asset": "FD",
+          "name": "Money Market ETF"
+        },
+        {
+          "symbol": "510300.SH",
+          "ak_symbol": "510300",
+          "asset": "FD",
+          "name": "CSI300 ETF"
+        },
+        {
+          "symbol": "510500.SH",
+          "ak_symbol": "510500",
+          "asset": "FD",
+          "name": "CSI500 ETF"
+        },
+        {
+          "symbol": "512100.SH",
+          "ak_symbol": "512100",
+          "asset": "FD",
+          "name": "CSI1000 ETF"
+        },
+        {
+          "symbol": "159915.SZ",
+          "ak_symbol": "159915",
+          "asset": "FD",
+          "name": "ChiNext ETF"
+        },
+        {
+          "symbol": "510880.SH",
+          "ak_symbol": "510880",
+          "asset": "FD",
+          "name": "Dividend ETF"
+        },
+        {
+          "symbol": "512480.SH",
+          "ak_symbol": "512480",
+          "asset": "FD",
+          "name": "Semiconductor ETF"
+        },
+        {
+          "symbol": "159819.SZ",
+          "ak_symbol": "159819",
+          "asset": "FD",
+          "name": "AI ETF"
+        },
+        {
+          "symbol": "562500.SH",
+          "ak_symbol": "562500",
+          "asset": "FD",
+          "name": "Robotics ETF"
+        },
+        {
+          "symbol": "516160.SH",
+          "ak_symbol": "516160",
+          "asset": "FD",
+          "name": "New Energy ETF"
+        },
+        {
+          "symbol": "513310.SH",
+          "ak_symbol": "513310",
+          "asset": "FD",
+          "name": "China Korea Semiconductor ETF"
+        },
+        {
+          "symbol": "588000.SH",
+          "ak_symbol": "588000",
+          "asset": "FD",
+          "name": "STAR50 ETF"
+        },
+        {
+          "symbol": "516980.SH",
+          "ak_symbol": "516980",
+          "asset": "FD",
+          "name": "Cloud Computing ETF"
+        },
+        {
+          "symbol": "512880.SH",
+          "ak_symbol": "512880",
+          "asset": "FD",
+          "name": "Securities ETF"
+        },
+        {
+          "symbol": "512660.SH",
+          "ak_symbol": "512660",
+          "asset": "FD",
+          "name": "Defense ETF"
+        },
+        {
+          "symbol": "159928.SZ",
+          "ak_symbol": "159928",
+          "asset": "FD",
+          "name": "Consumption ETF"
+        },
+        {
+          "symbol": "159920.SZ",
+          "ak_symbol": "159920",
+          "asset": "FD",
+          "name": "Hang Seng ETF"
+        },
+        {
+          "symbol": "161226.SZ",
+          "ak_symbol": "161226",
+          "asset": "FD",
+          "name": "Silver LOF"
+        },
+        {
+          "symbol": "159941.SZ",
+          "ak_symbol": "159941",
+          "asset": "FD",
+          "name": "Nasdaq 100 ETF"
+        },
+        {
+          "symbol": "513500.SH",
+          "ak_symbol": "513500",
+          "asset": "FD",
+          "name": "S&P 500 ETF"
+        },
+        {
+          "symbol": "513880.SH",
+          "ak_symbol": "513880",
+          "asset": "FD",
+          "name": "Nikkei 225 ETF"
+        },
+        {
+          "symbol": "513030.SH",
+          "ak_symbol": "513030",
+          "asset": "FD",
+          "name": "Europe ETF"
+        },
+        {
+          "symbol": "518880.SH",
+          "ak_symbol": "518880",
+          "asset": "FD",
+          "name": "Gold ETF"
+        },
+        {
+          "symbol": "159980.SZ",
+          "ak_symbol": "159980",
+          "asset": "FD",
+          "name": "Nonferrous ETF"
+        },
+        {
+          "symbol": "159985.SZ",
+          "ak_symbol": "159985",
+          "asset": "FD",
+          "name": "Soybean Meal ETF"
+        },
+        {
+          "symbol": "515220.SH",
+          "ak_symbol": "515220",
+          "asset": "FD",
+          "name": "Coal ETF"
+        },
+        {
+          "symbol": "162411.SZ",
+          "ak_symbol": "162411",
+          "asset": "FD",
+          "name": "Crude Oil ETF"
+        }
+      ]
+    },
+    "strategy": {
+      "primary_strategy": "momentum_crowding_convex",
+      "rebalance": "W-FRI",
+      "top_quantile": 0.3,
+      "max_weight": 0.1,
+      "transaction_cost_bps": 3,
+      "transaction_cost_sensitivity_bps": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        10
+      ],
+      "benchmark_symbol": "510300.SH",
+      "benchmark_ma_window": 200,
+      "risk_on_exposure": 1.0,
+      "risk_off_exposure": 0.3,
+      "convex_optimizer": {
+        "max_weight": 0.15,
+        "covariance_window": 120,
+        "min_covariance_observations": 40,
+        "covariance_shrinkage": 0.1,
+        "covariance_ridge": 1e-06,
+        "annualization_factor": 252,
+        "signal_scale": 0.1,
+        "risk_aversion": 4.0,
+        "crowding_aversion": 0.0,
+        "turnover_penalty_bps": 750,
+        "max_turnover": null,
+        "allow_cash": false,
+        "max_ex_ante_volatility": null,
+        "solver_tolerance": 1e-09,
+        "max_iterations": 500
+      }
+    },
+    "performance": {
+      "risk_free_rate": 0.0,
+      "validation_split_date": "2023-01-01"
+    },
+    "factors": {
+      "ret_short_window": 5,
+      "ret_long_window": 20,
+      "crowding_window": 60,
+      "volatility_window": 20,
+      "score_weights": {
+        "ret_5d": 1.0,
+        "ret_20d": 1.0,
+        "crowding_penalty": 0.65,
+        "volatility_penalty": 0.1
+      }
+    },
+    "outputs": {
+      "figures_dir": "outputs/figures",
+      "tables_dir": "outputs/tables",
+      "reports_dir": "outputs/reports"
+    }
+  },
+  "data_refresh": false,
+  "parameter_search": false
+}
