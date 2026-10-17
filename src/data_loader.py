@@ -11,7 +11,7 @@ from typing import Any
 
 import pandas as pd
 
-from .data_cleaner import standardize_panel
+from .data_cleaner import parse_daily_dates, standardize_panel
 from .utils import normalize_date_string
 
 
@@ -66,6 +66,10 @@ def _adjust_tushare_fund_prices(
     if daily.empty or adjustment_factors.empty or not required.issubset(adjustment_factors.columns):
         raise DataDownloadError("Tushare fund adjustment factors are empty or incomplete.")
 
+    daily = daily.copy()
+    adjustment_factors = adjustment_factors.copy()
+    daily["trade_date"] = parse_daily_dates(daily["trade_date"])
+    adjustment_factors["trade_date"] = parse_daily_dates(adjustment_factors["trade_date"])
     out = daily.merge(
         adjustment_factors[["trade_date", "adj_factor"]],
         on="trade_date",
@@ -73,7 +77,7 @@ def _adjust_tushare_fund_prices(
         validate="one_to_one",
     )
     out["adj_factor"] = pd.to_numeric(out["adj_factor"], errors="coerce")
-    if out["adj_factor"].isna().any():
+    if (~out["adj_factor"].gt(0) | ~out["adj_factor"].lt(float("inf"))).any():
         raise DataDownloadError("Tushare fund adjustment factors do not cover every daily price row.")
     latest = out.sort_values("trade_date")["adj_factor"].iloc[-1]
     scale = out["adj_factor"] if adjustment == "hfq" else out["adj_factor"] / latest
@@ -198,6 +202,9 @@ def _fetch_akshare_one(item: dict[str, str], config: dict[str, Any], logger: log
         except Exception as exc:
             raise DataDownloadError(f"AKShare fund_etf_hist_em({code}) failed: {exc}") from exc
 
+    if asset == "FD":
+        raise DataDownloadError("AKShare ETF history is empty or unavailable; index fallback is prohibited.")
+
     if "." in item["symbol"]:
         market = item["symbol"].split(".")[-1].lower()
         code = item["symbol"].split(".")[0]
@@ -216,7 +223,7 @@ def _fetch_akshare_one(item: dict[str, str], config: dict[str, Any], logger: log
                     out = _normalize_akshare(df, item["symbol"], item["name"])
                     start = pd.to_datetime(str(config["data"].get("start_date", "")), errors="coerce")
                     end = pd.to_datetime(str(config["data"].get("end_date", "")), errors="coerce")
-                    out["date"] = pd.to_datetime(out["date"])
+                    out["date"] = parse_daily_dates(out["date"])
                     if pd.notna(start):
                         out = out[out["date"] >= start]
                     if pd.notna(end):
@@ -235,6 +242,7 @@ def download_panel(config: dict[str, Any], logger: logging.Logger) -> pd.DataFra
     raw_dir = config["data"]["raw_dir"]
     prefer_tushare = bool(config["data"].get("prefer_tushare", True))
     failure_path = Path(config["outputs"]["reports_dir"]) / "data_failures.csv"
+    failure_path.parent.mkdir(parents=True, exist_ok=True)
     if failure_path.exists():
         failure_path.unlink()
 
@@ -246,6 +254,12 @@ def download_panel(config: dict[str, Any], logger: logging.Logger) -> pd.DataFra
                 logger.info("Fetching %s %s from %s.", item["symbol"], item["name"], source)
                 df = _fetch_tushare_one(item, config, logger) if source == "tushare" else _fetch_akshare_one(item, config, logger)
                 _save_raw(df, raw_dir, source, item["symbol"])
+                df = standardize_panel(
+                    df, config["data"]["min_observations"], logger,
+                    max_abs_daily_return=config["data"].get("max_abs_daily_return"),
+                )
+                if set(df["symbol"]) != {item["symbol"]}:
+                    raise DataDownloadError("Provider returned an unexpected symbol.")
                 panels.append(df)
                 logger.info("Fetched %s rows for %s from %s.", len(df), item["symbol"], source)
                 break
@@ -259,6 +273,7 @@ def download_panel(config: dict[str, Any], logger: logging.Logger) -> pd.DataFra
     if failures:
         pd.DataFrame(failures).to_csv(failure_path, index=False, encoding="utf-8-sig")
         logger.warning("Saved data failure diagnostics to %s.", failure_path)
+        raise DataDownloadError("Incomplete configured universe; refusing to replace the processed snapshot.")
 
     if not panels:
         raise DataDownloadError("All data providers failed. See outputs/reports/data_failures.csv and pipeline.log.")
@@ -271,6 +286,23 @@ def download_panel(config: dict[str, Any], logger: logging.Logger) -> pd.DataFra
     )
     output_path = Path(config["data"]["processed_path"])
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    panel.to_parquet(output_path, index=False)
+    if output_path.exists():
+        previous = pd.read_parquet(output_path, columns=["date", "symbol"])
+        previous["date"] = parse_daily_dates(previous["date"])
+        start = config["data"].get("start_date")
+        end = config["data"].get("end_date")
+        if start:
+            previous = previous[previous["date"] >= pd.Timestamp(str(start))]
+        if end:
+            previous = previous[previous["date"] <= pd.Timestamp(str(end))]
+        previous = previous[previous["symbol"].isin(panel["symbol"])]
+        old_keys = pd.MultiIndex.from_frame(previous[["date", "symbol"]])
+        new_keys = pd.MultiIndex.from_frame(panel[["date", "symbol"]])
+        missing = old_keys.difference(new_keys)
+        if len(missing):
+            raise DataDownloadError(f"Snapshot lost {len(missing)} existing daily keys; refusing replacement.")
+    temporary = output_path.with_suffix(".tmp.parquet")
+    panel.to_parquet(temporary, index=False)
+    temporary.replace(output_path)
     logger.info("Saved processed panel to %s with %s rows.", output_path, len(panel))
     return panel
