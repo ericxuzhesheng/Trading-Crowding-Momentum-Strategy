@@ -35,6 +35,26 @@ def test_adjusted_price_guard_rejects_split_like_jump() -> None:
         standardize_panel(_panel_rows([1.0, 1.01, 0.10]), 2, max_abs_daily_return=0.30)
 
 
+@pytest.mark.parametrize("dtype", ["Float64", "Int64"])
+@pytest.mark.parametrize("closes, invalid_count", [
+    ([10, pd.NA, 11], 1),
+    ([pd.NA, pd.NA, pd.NA], 3),
+])
+def test_missing_nullable_closes_raise(dtype, closes, invalid_count):
+    rows = _panel_rows([10, 10, 11])
+    rows["close"] = pd.Series(closes, dtype=dtype)
+    with pytest.raises(ValueError, match=f"Invalid symbol or close in {invalid_count} rows"):
+        standardize_panel(rows, min_observations=2)
+
+
+@pytest.mark.parametrize("dtype", ["float64", "Float64", "Int64"])
+def test_valid_close_dtypes_preserve_values_and_alignment(dtype):
+    expected = _panel_rows([10, 10, 11])
+    expected["close"] = expected["close"].astype(dtype)
+    actual = standardize_panel(expected.iloc[::-1], min_observations=2)
+    pd.testing.assert_frame_equal(actual, expected)
+
+
 def test_akshare_receives_configured_price_adjustment(monkeypatch: pytest.MonkeyPatch) -> None:
     """The ETF history request should explicitly use forward-adjusted prices."""
     calls = {}
@@ -177,6 +197,18 @@ def test_invalid_primary_uses_validated_fallback(monkeypatch, tmp_path):
     bad = _panel_rows([1.0, 1.01])
     bad["date"] = ["20240101", "bad"]
     good = _panel_rows([1.0, 1.01])
+    monkeypatch.setattr(data_loader, "_fetch_tushare_one", lambda *args: bad)
+    monkeypatch.setattr(data_loader, "_fetch_akshare_one", lambda *args: good)
+    result = data_loader.download_panel(config, logging.getLogger("test"))
+    pd.testing.assert_frame_equal(result, standardize_panel(good, 2))
+
+
+@pytest.mark.parametrize("dtype", ["Float64", "Int64"])
+def test_missing_nullable_close_uses_validated_fallback(monkeypatch, tmp_path, dtype):
+    config = _download_config(tmp_path)
+    bad = _panel_rows([10, 10, 11])
+    bad["close"] = pd.Series([10, pd.NA, 11], dtype=dtype)
+    good = _panel_rows([10, 10, 11])
     monkeypatch.setattr(data_loader, "_fetch_tushare_one", lambda *args: bad)
     monkeypatch.setattr(data_loader, "_fetch_akshare_one", lambda *args: good)
     result = data_loader.download_panel(config, logging.getLogger("test"))
