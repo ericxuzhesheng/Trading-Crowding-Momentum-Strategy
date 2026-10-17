@@ -63,7 +63,13 @@ def standardize_panel(
     for col in ["open", "high", "low", "close", "volume", "amount", "turnover"]:
         out[col] = pd.to_numeric(out[col], errors="coerce")
 
-    invalid = out["symbol"].isna() | ~out["close"].gt(0) | ~np.isfinite(out["close"])
+    # Nullable numeric comparisons propagate pd.NA, which any() otherwise skips.
+    invalid = (
+        out["symbol"].isna()
+        | out["close"].isna()
+        | ~out["close"].gt(0)
+        | ~np.isfinite(out["close"])
+    )
     if invalid.any():
         raise ValueError(f"Invalid symbol or close in {int(invalid.sum())} rows.")
     duplicates = out[out.duplicated(["symbol", "date"], keep=False)]
