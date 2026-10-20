@@ -48,10 +48,14 @@ def test_missing_nullable_closes_raise(dtype, closes, invalid_count):
 
 
 @pytest.mark.parametrize("dtype", ["float64", "Float64", "Int64"])
-def test_valid_close_dtypes_preserve_values_and_alignment(dtype):
+@pytest.mark.parametrize("date_unit", ["us", "ns"])
+def test_valid_close_dtypes_preserve_values_and_alignment(dtype, date_unit):
     expected = _panel_rows([10, 10, 11])
     expected["close"] = expected["close"].astype(dtype)
+    expected["date"] = expected["date"].astype(f"datetime64[{date_unit}]")
     actual = standardize_panel(expected.iloc[::-1], min_observations=2)
+    # Cleaning normalizes daily keys to nanoseconds regardless of input precision.
+    expected["date"] = expected["date"].astype("datetime64[ns]")
     pd.testing.assert_frame_equal(actual, expected)
 
 
