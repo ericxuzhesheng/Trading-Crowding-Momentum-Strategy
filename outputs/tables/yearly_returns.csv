@@ -6,7 +6,7 @@
 2023,all_index_equal_weight,0.03717759704644896
 2024,all_index_equal_weight,0.1407097396977921
 2025,all_index_equal_weight,0.26899969986315964
-2026,all_index_equal_weight,-0.0025987637453644963
+2026,all_index_equal_weight,0.010126052291276055
 2019,crowding_top_quantile,0.1751803046611211
 2020,crowding_top_quantile,0.24053487120065786
 2021,crowding_top_quantile,0.13829627697723956
@@ -14,7 +14,7 @@
 2023,crowding_top_quantile,0.035346456868050824
 2024,crowding_top_quantile,0.18008369283933612
 2025,crowding_top_quantile,0.4018808110123431
-2026,crowding_top_quantile,0.11749305239135133
+2026,crowding_top_quantile,0.1296763866482642
 2019,csi300_etf_buy_hold,0.38604229656044686
 2020,csi300_etf_buy_hold,0.2907714843749991
 2021,csi300_etf_buy_hold,-0.04029639141089958
@@ -22,7 +22,7 @@
 2023,csi300_etf_buy_hold,-0.09751127443594132
 2024,csi300_etf_buy_hold,0.17406461646849203
 2025,csi300_etf_buy_hold,0.20836372792825375
-2026,csi300_etf_buy_hold,-0.11345492427113968
+2026,csi300_etf_buy_hold,-0.09812872500726122
 2019,momentum_crowding_convex,0.25673440192461316
 2020,momentum_crowding_convex,0.2915324483086916
 2021,momentum_crowding_convex,0.16699534485181133
@@ -30,7 +30,7 @@
 2023,momentum_crowding_convex,0.0342548785571577
 2024,momentum_crowding_convex,0.09141154726407108
 2025,momentum_crowding_convex,0.2745984085800861
-2026,momentum_crowding_convex,0.13332326896614877
+2026,momentum_crowding_convex,0.13103737003829252
 2019,momentum_crowding_convex_trend,0.19648664361757695
 2020,momentum_crowding_convex_trend,0.20087608644503518
 2021,momentum_crowding_convex_trend,0.13186438023083213
@@ -38,7 +38,7 @@
 2023,momentum_crowding_convex_trend,-0.03621439436746454
 2024,momentum_crowding_convex_trend,-0.029732752333992418
 2025,momentum_crowding_convex_trend,0.27459840858008655
-2026,momentum_crowding_convex_trend,0.13895262886112159
+2026,momentum_crowding_convex_trend,0.13704231150261226
 2019,momentum_crowding_penalty,0.14367353981682074
 2020,momentum_crowding_penalty,0.3476768876751979
 2021,momentum_crowding_penalty,0.17433215502356725
@@ -46,7 +46,7 @@
 2023,momentum_crowding_penalty,-0.03412376419148089
 2024,momentum_crowding_penalty,0.008258226703651284
 2025,momentum_crowding_penalty,0.24001336574920007
-2026,momentum_crowding_penalty,0.10412772814010673
+2026,momentum_crowding_penalty,0.1050694599155495
 2019,momentum_crowding_penalty_trend,0.09043041278540298
 2020,momentum_crowding_penalty_trend,0.2582829901593573
 2021,momentum_crowding_penalty_trend,0.1160185488609291
@@ -54,7 +54,7 @@
 2023,momentum_crowding_penalty_trend,-0.06667247036338131
 2024,momentum_crowding_penalty_trend,-0.03306607401063333
 2025,momentum_crowding_penalty_trend,0.24001336574919985
-2026,momentum_crowding_penalty_trend,0.1534131218689725
+2026,momentum_crowding_penalty_trend,0.1537410446141989
 2019,momentum_top_quantile,0.13363278601437223
 2020,momentum_top_quantile,0.31249933153605447
 2021,momentum_top_quantile,0.0626371440020499
@@ -62,4 +62,4 @@
 2023,momentum_top_quantile,-0.010219979710185179
 2024,momentum_top_quantile,0.004169733527004338
 2025,momentum_top_quantile,0.19425249572690406
-2026,momentum_top_quantile,0.009269214298100348
+2026,momentum_top_quantile,0.010632745416264688
