@@ -1,10 +1,10 @@
-# 每个交易日自动更新数据 | Auto-Update Data on Every Trading Day
+# ÿ���������Զ��������� | Auto-Update Data on Every Trading Day
 #
-# 定时：北京时间周一至周五 17:00（UTC 9:00），A 股收盘后
+# ��ʱ������ʱ����һ������ 17:00��UTC 9:00����A �����̺�
 # Schedule: Mon-Fri at 17:00 Beijing time (UTC 9:00), after A-share market close
 #
-# 节假日的非交易日：管道拉不到新数据，parquet 无变化 → 自动跳过提交
-# On non-trading holidays: no new data → parquet unchanged → commit step auto-skips
+# �ڼ��յķǽ����գ��ܵ������������ݣ�parquet �ޱ仯 �� �Զ������ύ
+# On non-trading holidays: no new data �� parquet unchanged �� commit step auto-skips
 
 name: Update Market Data
 
@@ -12,6 +12,10 @@ on:
   schedule:
     - cron: "0 9 * * 1-5"
   workflow_dispatch:
+
+concurrency:
+  group: market-data-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   update-data:
@@ -23,6 +27,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -55,22 +62,25 @@ jobs:
       - name: Update README with latest metrics
         run: python scripts/update_readme.py
 
-      - name: Commit updated data
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "chore: auto-update market data to latest"
-          commit_options: "--no-verify"
-          file_pattern: "data/processed/panel_daily.parquet outputs/figures/*.png outputs/tables/*.csv outputs/reports/backtest_report.md README.md"
-          skip_dirty_check: false
-          skip_fetch: true
-          disable_globbing: false
+      - name: Commit and verify published data
+        env:
+          TARGET_BRANCH: ${{ github.ref_name }}
+        run: python scripts/publish_market_data.py --branch "$TARGET_BRANCH"
 
       - name: Upload failure diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: market-data-failure-diagnostics
+          name: market-data-failure-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             outputs/reports/pipeline.log
             outputs/reports/data_failures.csv
+            outputs/reports/publication.json
+            outputs/reports/publication.patch
+            data/processed/panel_daily.parquet
+            outputs/figures/*.png
+            outputs/tables/*.csv
+            outputs/reports/backtest_report.md
+            README.md
+          retention-days: 14
           if-no-files-found: ignore

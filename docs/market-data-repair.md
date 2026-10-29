@@ -48,3 +48,33 @@ To validate the repaired live pipeline after merging:
 Re-running the old failed run uses the old commit and does not test this fix.
 Live provider access and TUSHARE_TOKEN are required. A local test pass is not
 evidence that scheduled updates have resumed.
+
+## Verified publication after transient push failures
+
+Run 40719582828 completed the pipeline but its one-shot push failed with HTTP 408.
+Publication now uses `scripts/publish_market_data.py`: three attempts, 10/20-second
+backoff, and a 120-second limit per Git command. Before each push and after every
+push result (including a timeout), it fetches the remote and checks commit ancestry.
+Success requires the remote to contain the generated commit, even if the client
+reported success. A remote descendant also counts as published. Unverifiable
+remote state never authorizes another push without a fresh successful check.
+
+Pushes are ordinary fast-forwards. Independently advanced remote history causes a
+failure; rerun the workflow from the latest branch head. No force push, automatic
+rebase, stash, or reset is used. Runs on the same branch are serialized without
+cancelling an active run; checkout resolves the branch when the queued job starts.
+Only the original generated-output allowlist is staged. Runtime `config.yaml`
+changes are excluded, and unexpected pre-staged changes cause an explicit failure.
+
+On failure, the workflow uploads generated files, pipeline diagnostics, and (when
+a publication commit was created) `publication.json` and a binary
+`publication.patch`, retained for 14 days. These contain the base, commit and branch
+needed to inspect the remote before recovery. The patch excludes runtime config.
+On a clean checkout of the recorded base, `git apply --check publication.patch`
+can validate recovery before applying it. Prefer a fresh workflow run when the
+remote has advanced; do not blindly apply an older market snapshot over newer data.
+
+The publication regression tests use local bare remotes and injected transport
+failures, covering transient/permanent failure, accepted-but-reported-failed pushes,
+timeouts, unknown remote state, remote descendants, concurrent updates before and
+during push, dirty config, unchanged outputs, and binary recovery patches.
