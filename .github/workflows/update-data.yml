@@ -1,10 +1,10 @@
-# ÿ���������Զ��������� | Auto-Update Data on Every Trading Day
+# 每个交易日自动更新数据 | Auto-Update Data on Every Trading Day
 #
-# ��ʱ������ʱ����һ������ 17:00��UTC 9:00����A �����̺�
+# 定时：北京时间周一至周五 17:00（UTC 9:00），A 股收盘后
 # Schedule: Mon-Fri at 17:00 Beijing time (UTC 9:00), after A-share market close
 #
-# �ڼ��յķǽ����գ��ܵ������������ݣ�parquet �ޱ仯 �� �Զ������ύ
-# On non-trading holidays: no new data �� parquet unchanged �� commit step auto-skips
+# 节假日的非交易日：管道拉不到新数据，parquet 无变化 → 自动跳过提交
+# On non-trading holidays: no new data → parquet unchanged → commit step auto-skips
 
 name: Update Market Data
 
