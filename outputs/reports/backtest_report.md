@@ -12,14 +12,14 @@ Sharpe uses annualized arithmetic daily excess returns under `sqrt(252) * mean(r
 
 | Strategy                            | Annual Return   | Annual Vol   |   Sharpe | Max Drawdown   | Average Turnover   |   Final NAV |
 |:------------------------------------|:----------------|:-------------|---------:|:---------------|:-------------------|------------:|
-| Configured-Universe EW Reference    | 7.18%           | 12.65%       |    0.633 | -15.95%        | N/A                |       1.849 |
-| Composite Crowding-Score Control    | 12.28%          | 14.41%       |    0.907 | -20.85%        | 0.749              |       2.791 |
-| CSI 300 Buy & Hold                  | 1.84%           | 19.53%       |    0.195 | -42.16%        | N/A                |       1.175 |
-| Convex Mom-Crowding                 | 12.98%          | 12.06%       |    1.112 | -11.54%        | 0.403              |       2.947 |
-| Convex Mom-Crowding + Trend         | 8.89%           | 10.72%       |    0.879 | -13.12%        | 0.334              |       2.126 |
-| Capped Top-30% Mom-Crowding         | 9.04%           | 14.33%       |    0.699 | -22.94%        | 0.872              |       2.152 |
-| Capped Top-30% Mom-Crowding + Trend | 7.36%           | 12.65%       |    0.647 | -19.23%        | 0.634              |       1.875 |
-| 5D Momentum Control                 | 4.85%           | 14.97%       |    0.404 | -26.25%        | 1.073              |       1.521 |
+| Configured-Universe EW Reference    | 7.08%           | 12.65%       |    0.625 | -15.95%        | N/A                |       1.833 |
+| Composite Crowding-Score Control    | 12.16%          | 14.41%       |    0.899 | -20.85%        | 0.749              |       2.764 |
+| CSI 300 Buy & Hold                  | 1.74%           | 19.53%       |    0.190 | -42.16%        | N/A                |       1.165 |
+| Convex Mom-Crowding                 | 12.94%          | 12.05%       |    1.109 | -11.54%        | 0.403              |       2.939 |
+| Convex Mom-Crowding + Trend         | 8.84%           | 10.72%       |    0.875 | -13.12%        | 0.334              |       2.117 |
+| Capped Top-30% Mom-Crowding         | 8.93%           | 14.33%       |    0.692 | -23.10%        | 0.872              |       2.134 |
+| Capped Top-30% Mom-Crowding + Trend | 7.32%           | 12.65%       |    0.644 | -19.23%        | 0.634              |       1.870 |
+| 5D Momentum Control                 | 4.76%           | 14.97%       |    0.398 | -26.25%        | 1.073              |       1.510 |
 
 The Configured-Universe EW Reference averages all configured return slots each day, fills unavailable returns with zero, and does not estimate turnover or costs. Benchmark turnover shown as N/A was not modeled.
 
@@ -28,7 +28,7 @@ The Configured-Universe EW Reference averages all configured return slots each d
 | Period            | Annual Return   | Annual Vol   |   Sharpe | Max Drawdown   |
 |:------------------|:----------------|:-------------|---------:|:---------------|
 | Before 2023-01-01 | 13.15%          | 11.96%       |    1.129 | -11.54%        |
-| From 2023-01-01   | 12.80%          | 12.18%       |    1.091 | -10.95%        |
+| From 2023-01-01   | 12.71%          | 12.17%       |    1.084 | -10.95%        |
 
 This is a single descriptive time split. It does not establish a frozen or fully untouched out-of-sample test.
 
@@ -36,12 +36,12 @@ This is a single descriptive time split. It does not establish a frozen or fully
 
 | Cost per Traded Notional   | Case     | Annual Return   | Annual Vol   |   Sharpe | Max Drawdown   |   Final NAV |
 |:---------------------------|:---------|:----------------|:-------------|---------:|:---------------|------------:|
-| 0 bps                      | Scenario | 13.68%          | 12.06%       |    1.165 | -11.36%        |       3.113 |
-| 1 bps                      | Scenario | 13.44%          | 12.06%       |    1.148 | -11.42%        |       3.056 |
-| 2 bps                      | Scenario | 13.21%          | 12.06%       |    1.130 | -11.48%        |       3.001 |
-| 3 bps                      | Base     | 12.98%          | 12.06%       |    1.112 | -11.54%        |       2.947 |
-| 5 bps                      | Scenario | 12.51%          | 12.05%       |    1.077 | -11.67%        |       2.842 |
-| 10 bps                     | Scenario | 11.36%          | 12.05%       |    0.989 | -11.98%        |       2.594 |
+| 0 bps                      | Scenario | 13.64%          | 12.06%       |    1.162 | -11.36%        |       3.104 |
+| 1 bps                      | Scenario | 13.40%          | 12.06%       |    1.145 | -11.42%        |       3.048 |
+| 2 bps                      | Scenario | 13.17%          | 12.06%       |    1.127 | -11.48%        |       2.993 |
+| 3 bps                      | Base     | 12.94%          | 12.05%       |    1.109 | -11.54%        |       2.939 |
+| 5 bps                      | Scenario | 12.47%          | 12.05%       |    1.074 | -11.67%        |       2.833 |
+| 10 bps                     | Scenario | 11.32%          | 12.04%       |    0.986 | -11.98%        |       2.587 |
 
 Each rate is charged per unit of gross L1 traded notional. A complete switch from one fully invested portfolio to another has L1 turnover of 2.0 and therefore charges both sell and buy legs.
 
