@@ -1,0 +1,9 @@
+{
+  "checked_on": "2026-11-16",
+  "validation": "passed",
+  "data_cutoff": "2026-11-16",
+  "asset_count": 30,
+  "rows": 56321,
+  "scope": "Updated market data; strategy outputs retained from the preceding publication",
+  "retained_research_commit": "5f96940f17ecd1173d2bbc39f51a7b58b99e0c72"
+}
