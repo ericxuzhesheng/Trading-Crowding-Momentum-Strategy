@@ -9,7 +9,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Universe-30%20Multi--Asset%20Funds-f3c63f?style=for-the-badge&labelColor=4a4f59" alt="Universe">
-  <img src="https://img.shields.io/badge/Period-2018-2026%20%7C%2056441%20obs-4caf50?style=for-the-badge&labelColor=4a4f59" alt="Period">
+  <img src="https://img.shields.io/badge/Period-2018-2026%20%7C%2056471%20obs-4caf50?style=for-the-badge&labelColor=4a4f59" alt="Period">
   <img src="https://img.shields.io/badge/Research-Convex%20QP%20%7C%20Temporal%20Split%20%7C%20Cost%20Stress-9853e6?style=for-the-badge&labelColor=4a4f59" alt="Research Design">
   <img src="https://img.shields.io/badge/PYTHON-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=4a4f59" alt="Python">
   <img src="https://img.shields.io/badge/LICENSE-MIT-111111?style=for-the-badge&labelColor=4a4f59" alt="MIT">
@@ -66,7 +66,7 @@
 
 ### 实证结果与证据边界
 
-本次前复权数据运行覆盖 2018-01-02 至 2026-11-20，配置中共有 30 只场内基金，各标的按可用历史进入，合计 56441 条日频记录。
+本次前复权数据运行覆盖 2018-01-02 至 2026-11-23，配置中共有 30 只场内基金，各标的按可用历史进入，合计 56471 条日频记录。
 
 主实验 `momentum_crowding_convex` 在所有信号有效且历史充足的标的上连续求权重，单标的上限为 15%，风险估计使用 120 日收缩协方差。求解状态和历史不足时的确定性回退均记录在输出中，自动报告会列出当前统计。以下数字均为历史回测结果，用于比较研究设计，不代表实盘收益。
 
@@ -74,14 +74,14 @@
 
 | 策略 | 年化收益 | 年化波动 | Sharpe | 最大回撤 | 最终净值 |
 |:---|---:|---:|---:|---:|---:|
-| 全配置资产等权参照 | 6.25% | 12.69% | 0.56 | -19.42% | 1.714 |
-| 复合拥挤度得分对照 | 11.30% | 14.46% | 0.84 | -25.15% | 2.587 |
-| 沪深300 ETF 买入持有 | 1.47% | 19.51% | 0.18 | -42.16% | 1.138 |
-| 凸优化动量 - 拥挤度 | 12.46% | 12.05% | 1.07 | -13.81% | 2.837 |
-| 凸优化动量 - 拥挤度 + 趋势过滤 | 8.69% | 10.70% | 0.86 | -13.12% | 2.096 |
-| 动量 - 拥挤度 top30 上限等权 | 8.44% | 14.32% | 0.66 | -25.99% | 2.054 |
-| 动量 - 拥挤度 top30 上限等权 + 趋势过滤 | 7.15% | 12.63% | 0.63 | -19.57% | 1.847 |
-| 5 日动量对照 | 3.97% | 15.00% | 0.35 | -30.52% | 1.414 |
+| 全配置资产等权参照 | 6.34% | 12.69% | 0.57 | -19.42% | 1.728 |
+| 复合拥挤度得分对照 | 11.46% | 14.46% | 0.85 | -25.15% | 2.624 |
+| 沪深300 ETF 买入持有 | 1.48% | 19.50% | 0.18 | -42.16% | 1.139 |
+| 凸优化动量 - 拥挤度 | 12.46% | 12.05% | 1.07 | -13.81% | 2.839 |
+| 凸优化动量 - 拥挤度 + 趋势过滤 | 8.70% | 10.70% | 0.86 | -13.12% | 2.099 |
+| 动量 - 拥挤度 top30 上限等权 | 8.49% | 14.32% | 0.66 | -25.99% | 2.063 |
+| 动量 - 拥挤度 top30 上限等权 + 趋势过滤 | 7.16% | 12.63% | 0.63 | -19.57% | 1.849 |
+| 5 日动量对照 | 3.99% | 14.99% | 0.35 | -30.52% | 1.415 |
 
 “全配置资产等权参照”每天平均全部配置标的的收益，尚无可用行情的标的按零收益处理，并且没有估算换手和成本。因此它只用于提供粗略的收益参照。
 
@@ -101,12 +101,12 @@
 
 | 每单位成交成本 | 口径 | 年化收益 | 年化波动 | Sharpe | 最大回撤 | 最终净值 |
 |---:|:---|---:|---:|---:|---:|---:|
-| 0 bps | 情景 | 13.16% | 12.06% | 1.125 | -13.58% | 2.997 |
-| 1 bps | 情景 | 12.92% | 12.05% | 1.108 | -13.66% | 2.943 |
-| 2 bps | 情景 | 12.69% | 12.05% | 1.090 | -13.73% | 2.890 |
-| 3 bps | 基准 | 12.46% | 12.05% | 1.073 | -13.81% | 2.837 |
-| 5 bps | 情景 | 12.00% | 12.05% | 1.037 | -13.97% | 2.736 |
-| 10 bps | 情景 | 10.85% | 12.04% | 0.949 | -14.36% | 2.497 |
+| 0 bps | 情景 | 13.15% | 12.05% | 1.126 | -13.58% | 3.000 |
+| 1 bps | 情景 | 12.92% | 12.05% | 1.108 | -13.66% | 2.945 |
+| 2 bps | 情景 | 12.69% | 12.05% | 1.091 | -13.73% | 2.892 |
+| 3 bps | 基准 | 12.46% | 12.05% | 1.073 | -13.81% | 2.839 |
+| 5 bps | 情景 | 11.99% | 12.05% | 1.038 | -13.97% | 2.737 |
+| 10 bps | 情景 | 10.84% | 12.04% | 0.949 | -14.36% | 2.497 |
 <!-- COST_SENSITIVITY_ZH_END -->
 
 成本率按每单位模拟成交名义本金收取，而换手采用完整 L1 口径 `sum(abs(w_target - w_previous))`。因此从现金建仓至 100% 仓位的换手为 1，从一个满仓组合完全切换到另一个满仓组合的换手为 2，后者会同时计入卖出和买入两侧成本。3 bps 仅为基准回测假设，不能视作券商佣金报价，也不同于优化器的 750 bp-equivalent 换手正则。
@@ -280,7 +280,7 @@ The evaluation separates standard daily excess-return Sharpe from the CAGR-to-vo
 
 ### Empirical Results and Evidence Boundary
 
-The latest forward-adjusted run covers 2018-01-02 to 2026-11-20 and contains 56441 daily observations across 30 configured listed funds over their available histories.
+The latest forward-adjusted run covers 2018-01-02 to 2026-11-23 and contains 56471 daily observations across 30 configured listed funds over their available histories.
 
 The main `momentum_crowding_convex` experiment optimizes across every instrument with a valid signal and sufficient history. It uses a 15% single-instrument cap and a 120-day shrunk covariance estimate. Solver states and deterministic insufficient-history fallbacks are recorded in the outputs, and the generated report gives the current counts. Every figure below comes from a historical backtest and supports comparison within this research design; it does not represent live performance.
 
@@ -288,14 +288,14 @@ Sharpe uses `sqrt(252) * mean(daily_return - daily_rf) / std(daily_return)`. The
 
 | Strategy | Annual Return | Annual Vol | Sharpe | Max Drawdown | Final NAV |
 |:---|---:|---:|---:|---:|---:|
-| Configured-Universe EW Reference | 6.25% | 12.69% | 0.56 | -19.42% | 1.714 |
-| Composite Crowding-Score Control | 11.30% | 14.46% | 0.84 | -25.15% | 2.587 |
-| CSI 300 Buy & Hold | 1.47% | 19.51% | 0.18 | -42.16% | 1.138 |
-| Convex Mom-Crowding | 12.46% | 12.05% | 1.07 | -13.81% | 2.837 |
-| Convex Mom-Crowding + Trend | 8.69% | 10.70% | 0.86 | -13.12% | 2.096 |
-| Capped Top-30% Mom-Crowding | 8.44% | 14.32% | 0.66 | -25.99% | 2.054 |
-| Capped Top-30% Mom-Crowding + Trend | 7.15% | 12.63% | 0.63 | -19.57% | 1.847 |
-| 5D Momentum Control | 3.97% | 15.00% | 0.35 | -30.52% | 1.414 |
+| Configured-Universe EW Reference | 6.34% | 12.69% | 0.57 | -19.42% | 1.728 |
+| Composite Crowding-Score Control | 11.46% | 14.46% | 0.85 | -25.15% | 2.624 |
+| CSI 300 Buy & Hold | 1.48% | 19.50% | 0.18 | -42.16% | 1.139 |
+| Convex Mom-Crowding | 12.46% | 12.05% | 1.07 | -13.81% | 2.839 |
+| Convex Mom-Crowding + Trend | 8.70% | 10.70% | 0.86 | -13.12% | 2.099 |
+| Capped Top-30% Mom-Crowding | 8.49% | 14.32% | 0.66 | -25.99% | 2.063 |
+| Capped Top-30% Mom-Crowding + Trend | 7.16% | 12.63% | 0.63 | -19.57% | 1.849 |
+| 5D Momentum Control | 3.99% | 14.99% | 0.35 | -30.52% | 1.415 |
 
 The Configured-Universe EW Reference averages returns across all configured slots each day, fills unavailable returns with zero, and does not estimate turnover or costs. It is included only as a rough return reference.
 
@@ -315,12 +315,12 @@ These scenarios hold signals and target weights fixed and only reprice gross L1 
 
 | Cost per Traded Notional | Case | Annual Return | Annual Vol | Sharpe | Max Drawdown | Final NAV |
 |---:|:---|---:|---:|---:|---:|---:|
-| 0 bps | Scenario | 13.16% | 12.06% | 1.125 | -13.58% | 2.997 |
-| 1 bps | Scenario | 12.92% | 12.05% | 1.108 | -13.66% | 2.943 |
-| 2 bps | Scenario | 12.69% | 12.05% | 1.090 | -13.73% | 2.890 |
-| 3 bps | Base | 12.46% | 12.05% | 1.073 | -13.81% | 2.837 |
-| 5 bps | Scenario | 12.00% | 12.05% | 1.037 | -13.97% | 2.736 |
-| 10 bps | Scenario | 10.85% | 12.04% | 0.949 | -14.36% | 2.497 |
+| 0 bps | Scenario | 13.15% | 12.05% | 1.126 | -13.58% | 3.000 |
+| 1 bps | Scenario | 12.92% | 12.05% | 1.108 | -13.66% | 2.945 |
+| 2 bps | Scenario | 12.69% | 12.05% | 1.091 | -13.73% | 2.892 |
+| 3 bps | Base | 12.46% | 12.05% | 1.073 | -13.81% | 2.839 |
+| 5 bps | Scenario | 11.99% | 12.05% | 1.038 | -13.97% | 2.737 |
+| 10 bps | Scenario | 10.84% | 12.04% | 0.949 | -14.36% | 2.497 |
 <!-- COST_SENSITIVITY_EN_END -->
 
 The rate is charged per unit of traded notional, while turnover uses the full L1 definition `sum(abs(w_target - w_previous))`. Moving from cash to a fully invested portfolio has turnover 1; completely replacing one fully invested portfolio with another has turnover 2 and charges both sell and buy legs. The 3 bps base case is a backtest assumption, not a broker quote, and is separate from the optimizer's 750 bp-equivalent turnover regularizer.
